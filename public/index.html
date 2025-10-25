@@ -1,0 +1,1175 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eva Vidal - Sistema de Reservas</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+            /* Animated Gradient Background */
+            body::before {
+                content: '';
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: radial-gradient(circle at 20% 50%, rgba(102, 126, 234, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(118, 75, 162, 0.3) 0%, transparent 50%), radial-gradient(circle at 40% 20%, rgba(240, 147, 251, 0.3) 0%, transparent 50%);
+                animation: gradientShift 15s ease infinite;
+            }
+
+        @keyframes gradientShift {
+            0%, 100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.8;
+                transform: scale(1.1);
+            }
+        }
+
+        /* Floating Orbs with Blur */
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.5;
+            animation: floatOrb 20s infinite ease-in-out;
+            pointer-events: none;
+        }
+
+        .orb1 {
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, #ff6b9d, #c471ed);
+            top: -200px;
+            left: -200px;
+            animation-delay: 0s;
+        }
+
+        .orb2 {
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, #4facfe, #00f2fe);
+            bottom: -150px;
+            right: -150px;
+            animation-delay: 7s;
+        }
+
+        .orb3 {
+            width: 450px;
+            height: 450px;
+            background: radial-gradient(circle, #f093fb, #f5576c);
+            top: 50%;
+            left: 50%;
+            animation-delay: 14s;
+        }
+
+        @keyframes floatOrb {
+            0%, 100% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            33% {
+                transform: translate(100px, -100px) scale(1.2);
+            }
+
+            66% {
+                transform: translate(-80px, 80px) scale(0.8);
+            }
+        }
+
+        /* Sparkle Effects */
+        .sparkle {
+            position: fixed;
+            width: 3px;
+            height: 3px;
+            background: white;
+            border-radius: 50%;
+            opacity: 0;
+            animation: sparkleAnim 3s infinite;
+            pointer-events: none;
+        }
+
+        @keyframes sparkleAnim {
+            0%, 100% {
+                opacity: 0;
+                transform: scale(0);
+            }
+
+            50% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* Help Button Floating */
+        .help-button {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 10px 40px rgba(102, 126, 234, 0.4);
+            z-index: 1000;
+            animation: pulse 2s infinite;
+            transition: all 0.3s ease;
+        }
+
+            .help-button:hover {
+                transform: scale(1.1);
+                box-shadow: 0 15px 50px rgba(102, 126, 234, 0.6);
+            }
+
+            .help-button::before {
+                content: '💬';
+                font-size: 32px;
+            }
+
+        /* Help Notification */
+        .help-notification {
+            position: fixed;
+            bottom: 120px;
+            right: 30px;
+            background: white;
+            border-radius: 20px;
+            padding: 20px 25px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            z-index: 999;
+            opacity: 0;
+            transform: translateY(20px) scale(0.8);
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            max-width: 280px;
+        }
+
+            .help-notification.show {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+
+        .help-notification-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #999;
+            transition: color 0.3s;
+        }
+
+            .help-notification-close:hover {
+                color: #333;
+            }
+
+        .help-notification h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        .help-notification p {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .help-phone {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+            .help-phone:hover {
+                transform: translateX(5px);
+                box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            }
+
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 60px 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 80px;
+            animation: fadeInDown 1.2s ease-out;
+        }
+
+        .logo-container {
+            display: inline-block;
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        .logo-glow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 280px;
+            height: 280px;
+            background: radial-gradient(circle, rgba(102, 126, 234, 0.4), transparent);
+            border-radius: 50%;
+            filter: blur(40px);
+            animation: glowPulse 3s ease-in-out infinite;
+        }
+
+        @keyframes glowPulse {
+            0%, 100% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 0.5;
+            }
+
+            50% {
+                transform: translate(-50%, -50%) scale(1.2);
+                opacity: 0.8;
+            }
+        }
+
+        .logo-img {
+            width: 250px;
+            height: auto;
+            position: relative;
+            z-index: 2;
+            filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.2));
+            animation: gentleFloat 5s ease-in-out infinite;
+        }
+
+        @keyframes gentleFloat {
+            0%, 100% {
+                transform: translateY(0px) rotate(0deg);
+            }
+
+            25% {
+                transform: translateY(-15px) rotate(2deg);
+            }
+
+            75% {
+                transform: translateY(-10px) rotate(-2deg);
+            }
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 64px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+            text-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            letter-spacing: -2px;
+        }
+
+        .subtitle {
+            font-size: 22px;
+            color: rgba(255, 255, 255, 0.95);
+            font-weight: 300;
+            letter-spacing: 1px;
+        }
+
+        /* Glass Morphism Card */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(30px) saturate(180%);
+            border-radius: 40px;
+            padding: 60px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37), inset 0 1px 0 0 rgba(255, 255, 255, 0.5), 0 0 100px rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            animation: fadeInUp 1s ease-out;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .glass-card::before {
+                content: '';
+                position: absolute;
+                top: -50%;
+                left: -50%;
+                width: 200%;
+                height: 200%;
+                background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+                animation: shimmerEffect 10s infinite;
+            }
+
+        @keyframes shimmerEffect {
+            0% {
+                transform: translateX(-100%) translateY(-100%) rotate(45deg);
+            }
+
+            100% {
+                transform: translateX(100%) translateY(100%) rotate(45deg);
+            }
+        }
+
+        /* Services Section */
+        .services-section {
+            margin-bottom: 50px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .section-title {
+            color: white;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 35px;
+            text-align: center;
+            text-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+
+        .service-card {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(20px);
+            border-radius: 25px;
+            padding: 40px;
+            cursor: pointer;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+            transform-style: preserve-3d;
+        }
+
+            .service-card::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: -100%;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+                transition: left 0.7s;
+            }
+
+            .service-card:hover::before {
+                left: 100%;
+            }
+
+            .service-card:hover {
+                transform: translateY(-20px) rotateX(10deg) scale(1.05);
+                box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3), 0 0 30px rgba(255, 255, 255, 0.2);
+                border-color: rgba(255, 255, 255, 0.6);
+            }
+
+            .service-card.active {
+                background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.85));
+                border-color: white;
+                transform: translateY(-20px) scale(1.08);
+                box-shadow: 0 35px 70px rgba(0, 0, 0, 0.4), 0 0 50px rgba(255, 255, 255, 0.5);
+            }
+
+        .service-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+            display: block;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .service-card.active .service-icon {
+            animation: spin 1s ease-in-out;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg) scale(1);
+            }
+
+            50% {
+                transform: rotate(180deg) scale(1.2);
+            }
+
+            100% {
+                transform: rotate(360deg) scale(1);
+            }
+        }
+
+        .service-name {
+            font-size: 24px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 12px;
+            transition: color 0.3s;
+        }
+
+        .service-card.active .service-name {
+            color: #667eea;
+        }
+
+        .service-duration {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 15px;
+            transition: color 0.3s;
+        }
+
+        .service-card.active .service-duration {
+            color: #764ba2;
+        }
+
+        .service-price {
+            font-size: 38px;
+            font-weight: 800;
+            color: white;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            transition: color 0.3s;
+        }
+
+        .service-card.active .service-price {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Form Grid */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 50px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .input-group {
+            position: relative;
+            animation: slideInUp 0.8s ease-out backwards;
+        }
+
+            .input-group:nth-child(1) {
+                animation-delay: 0.1s;
+            }
+
+            .input-group:nth-child(2) {
+                animation-delay: 0.2s;
+            }
+
+            .input-group:nth-child(3) {
+                animation-delay: 0.3s;
+            }
+
+            .input-group:nth-child(4) {
+                animation-delay: 0.4s;
+            }
+
+        .input-icon {
+            position: absolute;
+            left: 25px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 24px;
+            z-index: 2;
+            transition: all 0.3s;
+        }
+
+        .input-group:hover .input-icon {
+            transform: translateY(-50%) scale(1.3) rotate(10deg);
+        }
+
+        input {
+            width: 100%;
+            padding: 22px 25px 22px 65px;
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-radius: 20px;
+            color: white;
+            font-size: 17px;
+            transition: all 0.4s ease;
+            outline: none;
+            transform-style: preserve-3d;
+            font-weight: 500;
+        }
+
+            input::placeholder {
+                color: rgba(255, 255, 255, 0.7);
+            }
+
+            input:focus {
+                border-color: white;
+                background: rgba(255, 255, 255, 0.4);
+                transform: translateY(-5px) rotateX(5deg);
+                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            }
+
+        /* Time Slots */
+        .time-section {
+            margin-bottom: 50px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .time-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            gap: 18px;
+        }
+
+        .time-slot {
+            padding: 18px;
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 15px;
+            color: white;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-align: center;
+            transform-style: preserve-3d;
+            animation: popIn 0.5s ease-out backwards;
+        }
+
+            .time-slot:nth-child(n) {
+                animation-delay: calc(0.03s * var(--i));
+            }
+
+        @keyframes popIn {
+            from {
+                opacity: 0;
+                transform: scale(0.3) rotateZ(15deg);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) rotateZ(0deg);
+            }
+        }
+
+        .time-slot:hover {
+            background: rgba(255, 255, 255, 0.4);
+            transform: translateY(-8px) rotateX(10deg) scale(1.08);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            border-color: white;
+        }
+
+        .time-slot.active {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.85));
+            color: #667eea;
+            border-color: white;
+            transform: translateY(-8px) scale(1.12);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Submit Button */
+        .submit-btn {
+            width: 100%;
+            padding: 28px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            background-size: 200% 200%;
+            border: none;
+            border-radius: 20px;
+            color: white;
+            font-size: 22px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.5s ease;
+            box-shadow: 0 15px 50px rgba(102, 126, 234, 0.5);
+            position: relative;
+            overflow: hidden;
+            animation: gradient 3s ease infinite;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            z-index: 1;
+        }
+
+        @keyframes gradient {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .submit-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+            transition: left 0.7s;
+        }
+
+        .submit-btn:hover::before {
+            left: 100%;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-10px) scale(1.03);
+            box-shadow: 0 25px 70px rgba(102, 126, 234, 0.7);
+        }
+
+        .submit-btn:active {
+            transform: translateY(-5px) scale(0.98);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Success Message */
+        .success-message {
+            display: none;
+            text-align: center;
+            padding: 80px;
+            animation: bounceIn 1s ease;
+        }
+
+            .success-message.show {
+                display: block;
+            }
+
+        .success-icon {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 40px;
+            animation: successPulse 1.5s infinite;
+            position: relative;
+        }
+
+            .success-icon::before {
+                content: "✓";
+                font-size: 70px;
+                color: white;
+                font-weight: bold;
+            }
+
+            .success-icon::after {
+                content: '';
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                border-radius: 50%;
+                border: 3px solid #38ef7d;
+                animation: ripple 1.5s infinite;
+            }
+
+        @keyframes ripple {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        @keyframes successPulse {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(56, 239, 125, 0.7);
+            }
+
+            50% {
+                transform: scale(1.08);
+                box-shadow: 0 0 0 30px rgba(56, 239, 125, 0);
+            }
+        }
+
+        .success-title {
+            font-size: 42px;
+            color: white;
+            font-weight: 800;
+            margin-bottom: 20px;
+            font-family: 'Playfair Display', serif;
+        }
+
+        .success-text {
+            font-size: 20px;
+            color: rgba(255, 255, 255, 0.95);
+        }
+
+        /* Info Footer */
+        .info-footer {
+            text-align: center;
+            margin-top: 50px;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 15px;
+            position: relative;
+            z-index: 1;
+        }
+
+            .info-footer p {
+                margin: 12px 0;
+                animation: fadeIn 1.2s ease-out backwards;
+            }
+
+                .info-footer p:nth-child(1) {
+                    animation-delay: 0.6s;
+                }
+
+                .info-footer p:nth-child(2) {
+                    animation-delay: 0.8s;
+                }
+
+        /* Animations */
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes bounceIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.3);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
+
+            70% {
+                transform: scale(0.9);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 42px;
+            }
+
+            .logo-img {
+                width: 180px;
+            }
+
+            .glass-card {
+                padding: 35px 25px;
+            }
+
+            .services-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .time-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .help-button {
+                bottom: 20px;
+                right: 20px;
+                width: 60px;
+                height: 60px;
+            }
+
+            .help-notification {
+                bottom: 100px;
+                right: 20px;
+                max-width: 250px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Floating Orbs -->
+    <div class="orb orb1"></div>
+    <div class="orb orb2"></div>
+    <div class="orb orb3"></div>
+
+    <!-- Sparkles -->
+    <script>
+        for (let i = 0; i < 20; i++) {
+            const sparkle = document.createElement('div');
+            sparkle.className = 'sparkle';
+            sparkle.style.left = Math.random() * 100 + '%';
+            sparkle.style.top = Math.random() * 100 + '%';
+            sparkle.style.animationDelay = Math.random() * 3 + 's';
+            document.body.appendChild(sparkle);
+        }
+    </script>
+
+    <!-- Help Button -->
+    <div class="help-button" id="helpBtn"></div>
+
+    <!-- Help Notification -->
+    <div class="help-notification" id="helpNotification">
+        <button class="help-notification-close" id="closeHelp">×</button>
+        <h4>¿Necesitas ayuda?</h4>
+        <p>Estamos aquí para asistirte con tu reserva</p>
+        <a href="tel:644137667" class="help-phone">
+            <span>📞</span>
+            <span>644 137 667</span>
+        </a>
+    </div>
+
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo-container">
+                <div class="logo-glow"></div>
+                <img src="https://i.postimg.cc/JhmhZ1bh/Eva-Vidal.png" alt="Eva Vidal" class="logo-img">
+            </div>
+            <h1>Reserva tu Cita</h1>
+            <p class="subtitle">Sistema de reservas con sincronización automática</p>
+        </div>
+
+        <!-- Main Card -->
+        <div class="glass-card">
+            <!-- Form Container -->
+            <div id="formContainer">
+                <!-- Services Section -->
+                <div class="services-section">
+                    <h2 class="section-title">✨ Selecciona tu Servicio</h2>
+                    <div class="services-grid">
+                        <div class="service-card" data-service="consulta">
+                            <span class="service-icon">🥗</span>
+                            <h3 class="service-name">Consulta Nutricional</h3>
+                            <p class="service-duration">⏱️ 60 minutos</p>
+                            <p class="service-price">50€</p>
+                        </div>
+                        <div class="service-card" data-service="seguimiento">
+                            <span class="service-icon">📊</span>
+                            <h3 class="service-name">Seguimiento</h3>
+                            <p class="service-duration">⏱️ 30 minutos</p>
+                            <p class="service-price">30€</p>
+                        </div>
+                        <div class="service-card" data-service="plan">
+                            <span class="service-icon">📋</span>
+                            <h3 class="service-name">Plan Personalizado</h3>
+                            <p class="service-duration">⏱️ 90 minutos</p>
+                            <p class="service-price">80€</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Fields -->
+                <div class="form-grid">
+                    <div class="input-group">
+                        <span class="input-icon">👤</span>
+                        <input type="text" id="name" placeholder="Nombre completo" required>
+                    </div>
+                    <div class="input-group">
+                        <span class="input-icon">📧</span>
+                        <input type="email" id="email" placeholder="Email" required>
+                    </div>
+                    <div class="input-group">
+                        <span class="input-icon">📱</span>
+                        <input type="tel" id="phone" placeholder="Teléfono" required>
+                    </div>
+                    <div class="input-group">
+                        <span class="input-icon">📅</span>
+                        <input type="date" id="date" required>
+                    </div>
+                </div>
+
+                <!-- Time Slots -->
+                <div class="time-section">
+                    <h2 class="section-title">⏰ Elige tu Horario</h2>
+                    <div class="time-grid" id="timeGrid"></div>
+                </div>
+
+                <!-- Submit Button -->
+                <button class="submit-btn" id="submitBtn" disabled>
+                    Confirmar Reserva
+                </button>
+            </div>
+
+            <!-- Success Message -->
+            <div class="success-message" id="successMessage">
+                <div class="success-icon"></div>
+                <h2 class="success-title">¡Reserva Confirmada!</h2>
+                <p class="success-text">Recibirás un email de confirmación en breve</p>
+            </div>
+        </div>
+
+        <!-- Info Footer -->
+        <div class="info-footer">
+            <p>🔒 Tus datos están protegidos y se guardan de forma segura</p>
+            <p>📧 Recibirás confirmación por email y calendario de Google</p>
+        </div>
+    </div>
+
+    <script>
+        const formState = {
+            service: '',
+            time: '',
+            name: '',
+            email: '',
+            phone: '',
+            date: ''
+        };
+
+        // Generate Time Slots
+        function generateTimeSlots() {
+            const timeGrid = document.getElementById('timeGrid');
+            const times = [];
+
+            for (let h = 9; h <= 18; h++) {
+                times.push(`${h.toString().padStart(2, '0')}:00`);
+                if (h < 18) times.push(`${h.toString().padStart(2, '0')}:30`);
+            }
+
+            times.forEach((time, index) => {
+                const slot = document.createElement('div');
+                slot.className = 'time-slot';
+                slot.textContent = time;
+                slot.dataset.time = time;
+                slot.style.setProperty('--i', index);
+                slot.addEventListener('click', () => selectTime(time));
+                timeGrid.appendChild(slot);
+            });
+        }
+
+        // Service Selection
+        document.querySelectorAll('.service-card').forEach(card => {
+            card.addEventListener('click', function () {
+                document.querySelectorAll('.service-card').forEach(c => c.classList.remove('active'));
+                this.classList.add('active');
+                formState.service = this.dataset.service;
+                validateForm();
+            });
+        });
+
+        // Time Selection
+        function selectTime(time) {
+            document.querySelectorAll('.time-slot').forEach(slot => slot.classList.remove('active'));
+            event.target.classList.add('active');
+            formState.time = time;
+            validateForm();
+        }
+
+        // Input Listeners
+        document.getElementById('name').addEventListener('input', (e) => {
+            formState.name = e.target.value;
+            validateForm();
+        });
+
+        document.getElementById('email').addEventListener('input', (e) => {
+            formState.email = e.target.value;
+            validateForm();
+        });
+
+        document.getElementById('phone').addEventListener('input', (e) => {
+            formState.phone = e.target.value;
+            validateForm();
+        });
+
+        document.getElementById('date').addEventListener('change', (e) => {
+            formState.date = e.target.value;
+            validateForm();
+        });
+
+        // Form Validation
+        function validateForm() {
+            const btn = document.getElementById('submitBtn');
+            const isValid = formState.service && formState.time &&
+                formState.name && formState.email &&
+                formState.phone && formState.date;
+            btn.disabled = !isValid;
+        }
+
+        // Submit Form
+        document.getElementById('submitBtn').addEventListener('click', async () => {
+            const btn = document.getElementById('submitBtn');
+            btn.textContent = 'Procesando...';
+            btn.disabled = true;
+
+            try {
+                // CAMBIA ESTA URL POR LA DE TU SERVIDOR EN RENDER
+                const response = await fetch('https://nutritionweb.onrender.com', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formState)
+                });
+
+                if (response.ok) {
+                    document.getElementById('formContainer').style.display = 'none';
+                    document.getElementById('successMessage').classList.add('show');
+
+                    setTimeout(() => {
+                        location.reload();
+                    }, 3500);
+                } else {
+                    alert('Error al procesar la reserva. Por favor, inténtalo de nuevo.');
+                    btn.textContent = 'Confirmar Reserva';
+                    btn.disabled = false;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error de conexión. Por favor, verifica tu conexión a internet.');
+                btn.textContent = 'Confirmar Reserva';
+                btn.disabled = false;
+            }
+        });
+
+        // Set minimum date
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('date').setAttribute('min', today);
+
+        // Help Button
+        const helpBtn = document.getElementById('helpBtn');
+        const helpNotification = document.getElementById('helpNotification');
+        const closeHelp = document.getElementById('closeHelp');
+
+        let helpShown = false;
+
+        // Show help notification after 5 seconds
+        setTimeout(() => {
+            if (!helpShown) {
+                helpNotification.classList.add('show');
+                helpShown = true;
+
+                // Auto hide after 8 seconds
+                setTimeout(() => {
+                    helpNotification.classList.remove('show');
+                }, 8000);
+            }
+        }, 5000);
+
+        // Toggle help notification on button click
+        helpBtn.addEventListener('click', () => {
+            helpNotification.classList.toggle('show');
+        });
+
+        // Close help notification
+        closeHelp.addEventListener('click', () => {
+            helpNotification.classList.remove('show');
+        });
+
+        // Show help notification periodically (every 30 seconds)
+        setInterval(() => {
+            if (!helpNotification.classList.contains('show')) {
+                helpNotification.classList.add('show');
+                setTimeout(() => {
+                    helpNotification.classList.remove('show');
+                }, 6000);
+            }
+        }, 30000);
+
+        // Initialize
+        generateTimeSlots();
+
+        // Add mouse move parallax effect
+        document.addEventListener('mousemove', (e) => {
+            const moveX = (e.clientX - window.innerWidth / 2) * 0.01;
+            const moveY = (e.clientY - window.innerHeight / 2) * 0.01;
+
+            document.querySelectorAll('.orb').forEach((orb, index) => {
+                const speed = (index + 1) * 0.5;
+                orb.style.transform = `translate(${moveX * speed}px, ${moveY * speed}px)`;
+            });
+        });
+    </script>
+</body>
+</html>
