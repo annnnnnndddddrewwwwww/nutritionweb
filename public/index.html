@@ -1084,13 +1084,20 @@
             btn.disabled = true;
 
             try {
-                // CAMBIA ESTA URL POR LA DE TU SERVIDOR EN RENDER
-                const response = await fetch('https://nutritionweb.onrender.com', {
+                // Endpoint correcto para reservas
+                const response = await fetch('/reservar', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify(formState)
+                    body: JSON.stringify({
+                        date: `${formState.date} ${formState.time}`,
+                        type: formState.service,
+                        nombre: formState.name.split(' ')[0],
+                        apellido: formState.name.split(' ').slice(1).join(' ') || formState.name,
+                        email: formState.email,
+                        telefono: formState.phone
+                    })
                 });
 
                 if (response.ok) {
