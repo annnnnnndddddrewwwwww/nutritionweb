@@ -12,241 +12,271 @@ app.use(cors());
 
 // Logging middleware
 app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
-  next();
+    console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+    next();
 });
 
 // Configurar Google Sheets y Calendar
 let auth;
 try {
-  const credentialsPath = path.join(__dirname, 'credentials.json');
-  let credentials;
+    // *** LÓGICA DE AUTENTICACIÓN OAUTH 2.0 CON REFRESH TOKEN ***
+    const clientId = process.env.OAUTH_CLIENT_ID;
+    const clientSecret = process.env.OAUTH_CLIENT_SECRET;
+    const refreshToken = process.env.OAUTH_REFRESH_TOKEN;
 
-  // Prioritiza variables de entorno (para Render)
-  if (process.env.CLIENT_EMAIL && process.env.PRIVATE_KEY) {
-    console.log('✅ Usando credentials desde variables de entorno');
-    let privateKey = process.env.PRIVATE_KEY.replace(/\\n/g, '\n');
+    if (clientId && clientSecret && refreshToken) {
+        console.log('✅ Usando autenticación OAuth 2.0 con Refresh Token');
 
-    // Corregir comillas y formato (si se colaron al copiar en Render)
-    if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
-      privateKey = privateKey.substring(1, privateKey.length - 1);
-      console.log('ℹ️ Se eliminaron comillas de la variable PRIVATE_KEY');
+        // 1. Inicializar el cliente OAuth
+        const oauth2Client = new google.auth.OAuth2(
+            clientId,
+            clientSecret,
+            // La URL de redirección no se usa con refresh token, pero es requerida
+            'urn:ietf:wg:oauth:2.0:oob'
+        );
+
+        // 2. Establecer el refresh token
+        oauth2Client.setCredentials({ refresh_token: refreshToken });
+
+        auth = oauth2Client;
+
+    } else {
+        throw new Error('❌ Faltan credenciales de OAuth 2.0 (OAUTH_CLIENT_ID, OAUTH_CLIENT_SECRET, OAUTH_REFRESH_TOKEN) en .env');
     }
+    // *** FIN DE LÓGICA OAUTH 2.0 ***
 
-    credentials = {
-      client_email: process.env.CLIENT_EMAIL,
-      private_key: privateKey
-    };
-  } 
-  // Fallback a archivo local (para desarrollo)
-  else if (fs.existsSync(credentialsPath)) {
-    credentials = JSON.parse(fs.readFileSync(credentialsPath, 'utf8'));
-    console.log('✅ Usando credentials.json desde archivo (local fallback)');
-  } 
-  // Si no hay credenciales
-  else {
-    console.error('❌ ERROR: No se encontraron credenciales.');
-    console.error('Asegúrate de tener credentials.json o las variables de entorno CLIENT_EMAIL y PRIVATE_KEY.');
-    throw new Error('Faltan credenciales de autenticación');
-  }
-
-  auth = new google.auth.GoogleAuth({
-    credentials: credentials,
-    scopes: [
-      'https://www.googleapis.com/auth/spreadsheets',
-      'https://www.googleapis.com/auth/calendar'
-    ]
-  });
-  console.log('✅ Google Auth configurado correctamente');
 } catch (error) {
-  console.error('❌ Error al configurar Google Auth:', error.message);
+    console.error('❌ Error al configurar la autenticación de Google:', error.message);
+    process.exit(1);
 }
 
+// Inicializar servicios de Google
 const sheets = google.sheets({ version: 'v4', auth });
 const calendar = google.calendar({ version: 'v3', auth });
 
+const SHEET_ID = process.env.SHEET_ID;
+const CALENDAR_ID = process.env.CALENDAR_ID;
+const CALENDAR_OWNER_EMAIL = process.env.CALENDAR_OWNER_EMAIL; // Nuevo
+
 // Configurar Nodemailer
-let transporter;
-try {
-  transporter = nodemailer.createTransport({
+const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
     }
-  });
-  console.log('✅ Nodemailer configurado correctamente');
-} catch (error) {
-  console.error('❌ Error al configurar Nodemailer:', error.message);
+});
+
+/**
+ * Valida que una fecha/hora no esté ya reservada en Google Calendar.
+ * @param {string} startTime - Hora de inicio en formato ISO string.
+ * @param {string} endTime - Hora de fin en formato ISO string.
+ * @returns {Promise<boolean>} - True si está disponible, False si está ocupada.
+ */
+async function isTimeSlotAvailable(startTime, endTime) {
+    try {
+        const response = await calendar.events.list({
+            calendarId: CALENDAR_ID,
+            timeMin: startTime,
+            timeMax: endTime,
+            timeZone: 'Europe/Madrid',
+            singleEvents: true,
+            orderBy: 'startTime',
+        });
+
+        // Filtra eventos que no son citas y están confirmados
+        const busyEvents = response.data.items.filter(event =>
+            event.status !== 'cancelled' && event.summary.toLowerCase().includes('cita')
+        );
+
+        return busyEvents.length === 0;
+
+    } catch (error) {
+        console.error('❌ Error al verificar disponibilidad en Google Calendar:', error.message);
+        throw new Error('Error al verificar disponibilidad en el calendario');
+    }
 }
 
-// Servir archivos estáticos PRIMERO
-app.use(express.static('public'));
+// Endpoint para verificar la disponibilidad (útil para el frontend)
+app.post('/check-availability', async (req, res) => {
+    const { date, type } = req.body;
 
-// Endpoint para crear una reserva EN LA RAÍZ
-app.post('/', async (req, res) => {
-  console.log('📥 Nueva solicitud de reserva recibida');
-  console.log('Datos recibidos:', JSON.stringify(req.body, null, 2));
-
-  try {
-    const { name, email, phone, date, time, service } = req.body;
-
-    // Validar datos
-    if (!name || !email || !phone || !date || !time || !service) {
-      console.error('❌ Faltan datos requeridos');
-      return res.status(400).json({
-        success: false,
-        message: 'Faltan datos requeridos',
-        error: 'Todos los campos son obligatorios'
-      });
+    if (!date || !type) {
+        return res.status(400).json({ success: false, message: 'Faltan parámetros de fecha o tipo de cita.' });
     }
 
-    console.log('1️⃣ Guardando en Google Sheets...');
-    const sheetId = process.env.SHEET_ID;
-    const timestamp = new Date().toISOString();
-    
+    // Define la duración de la cita (ej. 60 minutos)
+    const durationMinutes = 60;
+
+    // Asume que el tipo de cita viene con la hora (ej. '09:00 - Consulta Nutricional')
+    const timeSlot = date.split(' ')[1]; // Asume que la hora es el segundo elemento
+    const [hours, minutes] = timeSlot.split(':').map(Number);
+
+    const selectedDate = new Date(date);
+    selectedDate.setHours(hours, minutes, 0, 0);
+
+    const startTime = selectedDate;
+    const endTime = new Date(startTime.getTime() + durationMinutes * 60000);
+
     try {
-      await sheets.spreadsheets.values.append({
-        spreadsheetId: sheetId,
-        range: 'Citas!A:G',
-        valueInputOption: 'USER_ENTERED',
-        resource: {
-          values: [[timestamp, name, email, phone, date, time, service]]
+        const isAvailable = await isTimeSlotAvailable(startTime.toISOString(), endTime.toISOString());
+        res.json({ success: true, isAvailable });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+
+// Endpoint para procesar la reserva
+app.post('/reservar', async (req, res) => {
+    const {
+        date,
+        type: tipoCita,
+        nombre,
+        apellido,
+        email,
+        telefono
+    } = req.body;
+
+    if (!date || !tipoCita || !nombre || !apellido || !email || !telefono) {
+        return res.status(400).json({
+            success: false,
+            message: 'Faltan campos obligatorios para la reserva.'
+        });
+    }
+
+    try {
+        // 1. Preparar la hora
+        const durationMinutes = 60; // 60 minutos por cita
+        const [datePart, timePart] = date.split(' ');
+        const [hours, minutes] = timePart.split(':').map(Number);
+
+        const dateObj = new Date(datePart);
+        dateObj.setHours(hours, minutes, 0, 0);
+
+        const startTime = dateObj;
+        const endTime = new Date(startTime.getTime() + durationMinutes * 60000);
+
+        // 2. Verificar disponibilidad final
+        if (!(await isTimeSlotAvailable(startTime.toISOString(), endTime.toISOString()))) {
+            return res.status(409).json({
+                success: false,
+                message: 'El horario seleccionado ya no está disponible.'
+            });
         }
-      });
-      console.log('✅ Guardado en Google Sheets');
-    } catch (error) {
-      console.error('❌ Error en Google Sheets:', error.message);
-      throw new Error(`Error al guardar en Google Sheets: ${error.message}`);
-    }
 
-    console.log('2️⃣ Creando evento en Google Calendar...');
-    const [hours, minutes] = time.split(':');
-    const startDateTime = new Date(date);
-    startDateTime.setHours(parseInt(hours), parseInt(minutes), 0);
-    
-    // Asume una cita de 1 hora
-    const endDateTime = new Date(startDateTime);
-    endDateTime.setHours(startDateTime.getHours() + 1);
+        // 3. Crear el evento en Google Calendar
+        const event = {
+            summary: `Cita: ${nombre} ${apellido} (${tipoCita})`,
+            description: `Tipo: ${tipoCita}\nEmail Cliente: ${email}\nTeléfono: ${telefono}`,
+            start: {
+                dateTime: startTime.toISOString(),
+                timeZone: 'Europe/Madrid',
+            },
+            end: {
+                dateTime: endTime.toISOString(),
+                timeZone: 'Europe/Madrid',
+            },
+            // *** CORRECCIÓN CLAVE: Incluir ambos emails para el envío de invitaciones ***
+            attendees: [
+                { email: email },
+                { email: CALENDAR_OWNER_EMAIL } // El email del nutricionista (dueño del calendario)
+            ],
+            reminders: {
+                useDefault: false,
+                overrides: [
+                    { method: 'email', minutes: 24 * 60 },
+                    { method: 'popup', minutes: 10 },
+                ],
+            },
+        };
 
-    const event = {
-      summary: `Cita: ${service} - ${name}`,
-      description: `Cliente: ${name}\nTeléfono: ${phone}\nEmail: ${email}\nServicio: ${service}`,
-      start: {
-        dateTime: startDateTime.toISOString(),
-        timeZone: 'Europe/Madrid'
-      },
-      end: {
-        dateTime: endDateTime.toISOString(),
-        timeZone: 'Europe/Madrid'
-      },
-      // MODIFICACIÓN CLAVE: Solo incluimos al administrador como asistente para evitar el error
-      attendees: [
-        { email: process.env.ADMIN_EMAIL }
-      ],
-      reminders: {
-        useDefault: false,
-        overrides: [
-          { method: 'email', minutes: 24 * 60 },
-          { method: 'popup', minutes: 30 }
-        ]
-      },
-      sendUpdates: 'all'
-    };
+        const calendarEvent = await calendar.events.insert({
+            calendarId: CALENDAR_ID,
+            resource: event,
+            sendNotifications: true, // Importante para enviar la invitación
+            sendUpdates: 'all',
+        });
 
-    let calendarEvent;
-    try {
-      calendarEvent = await calendar.events.insert({
-        calendarId: process.env.CALENDAR_ID,
-        resource: event
-      });
-      console.log('✅ Evento creado en Google Calendar');
-    } catch (error) {
-      console.error('❌ Error en Google Calendar:', error.message);
-      throw new Error(`Error al crear evento en calendario: ${error.message}`);
-    }
+        // 4. Guardar en Google Sheets (Registro)
+        const row = [
+            new Date().toISOString(),
+            nombre,
+            apellido,
+            email,
+            telefono,
+            tipoCita,
+            startTime.toLocaleString('es-ES', { timeZone: 'Europe/Madrid' }),
+            calendarEvent.data.htmlLink,
+        ];
 
-    console.log('3️⃣ Enviando email de confirmación...');
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: email,
-      cc: process.env.ADMIN_EMAIL,
-      subject: '✅ Confirmación de Cita - Nutrición',
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px;">
-          <div style="background: white; padding: 30px; border-radius: 10px;">
-            <h1 style="color: #667eea; margin-bottom: 20px;">¡Cita Confirmada! ✅</h1>
-            <p style="font-size: 16px; color: #333;">Hola <strong>${name}</strong>,</p>
-            <p style="font-size: 16px; color: #333;">Tu cita ha sido reservada exitosamente.</p>
-            
-            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <h2 style="color: #667eea; margin-top: 0;">Detalles de tu Cita</h2>
-              <p style="margin: 10px 0;"><strong>📅 Fecha:</strong> ${date}</p>
-              <p style="margin: 10px 0;"><strong>🕐 Hora:</strong> ${time}</p>
-              <p style="margin: 10px 0;"><strong>💼 Servicio:</strong> ${service}</p>
-              <p style="margin: 10px 0;"><strong>📞 Teléfono:</strong> ${phone}</p>
-            </div>
+        await sheets.spreadsheets.values.append({
+            spreadsheetId: SHEET_ID,
+            range: 'Reservas!A:H',
+            valueInputOption: 'USER_ENTERED',
+            resource: {
+                values: [row],
+            },
+        });
 
-            <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin: 20px 0;">
-              <p style="margin: 0; color: #1565c0;">
-                📧 Recibirás todos los detalles en este correo. Te esperamos a la hora indicada.
-              </p>
-            </div>
-
-            <p style="font-size: 14px; color: #666; margin-top: 20px;">
-              Si necesitas cancelar o reprogramar, por favor contacta con nosotros con al menos 24 horas de antelación.
-            </p>
-          </div>
-        </div>
+        // 5. Enviar email de confirmación (no crítico)
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: 'Confirmación de Cita con Eva Vidal Nutrición',
+            html: `
+        <p>Hola ${nombre},</p>
+        <p>Tu cita de <b>${tipoCita}</b> ha sido confirmada:</p>
+        <ul>
+          <li>Fecha y Hora: <b>${startTime.toLocaleString('es-ES', { timeZone: 'Europe/Madrid' })}</b></li>
+          <li>Enlace al evento: <a href="${calendarEvent.data.htmlLink}">Ver en Google Calendar</a></li>
+        </ul>
+        <p>Recibirás un recordatorio por email antes de la cita. ¡Gracias!</p>
       `
-    };
+        };
 
-    try {
-      await transporter.sendMail(mailOptions);
-      console.log('✅ Email enviado correctamente');
+        try {
+            await transporter.sendMail(mailOptions);
+            console.log('✅ Email enviado correctamente');
+        } catch (error) {
+            console.error('⚠️ Error al enviar email (no crítico):', error.message);
+        }
+
+        console.log('✅ Reserva completada exitosamente');
+        res.json({
+            success: true,
+            message: 'Cita creada exitosamente',
+            calendarEventId: calendarEvent.data.id,
+            calendarLink: calendarEvent.data.htmlLink
+        });
+
     } catch (error) {
-      console.error('⚠️ Error al enviar email (no crítico):', error.message);
+        console.error('❌ Error al crear la cita:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al procesar la reserva',
+            error: error.message
+        });
     }
-
-    console.log('✅ Reserva completada exitosamente');
-    res.json({
-      success: true,
-      message: 'Cita creada exitosamente',
-      calendarEventId: calendarEvent.data.id,
-      calendarLink: calendarEvent.data.htmlLink
-    });
-
-  } catch (error) {
-    console.error('❌ Error al crear la cita:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error al procesar la reserva',
-      error: error.message
-    });
-  }
 });
 
 // Endpoint de salud
 app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
-    timestamp: new Date().toISOString(),
-    env: {
-      hasClientEmail: !!process.env.CLIENT_EMAIL,
-      hasPrivateKey: !!process.env.PRIVATE_KEY,
-      hasSheetId: !!process.env.SHEET_ID,
-      hasCalendarId: !!process.env.CALENDAR_ID,
-      hasEmailUser: !!process.env.EMAIL_USER,
-      hasEmailPass: !!process.env.EMAIL_PASS,
-      hasCredentialsFile: fs.existsSync(path.join(__dirname, 'credentials.json'))
-    }
-  });
+    res.json({
+        status: 'OK',
+        timestamp: new Date().toISOString(),
+        env: {
+            hasClientId: !!process.env.OAUTH_CLIENT_ID,
+            hasClientSecret: !!process.env.OAUTH_CLIENT_SECRET,
+            hasRefreshToken: !!process.env.OAUTH_REFRESH_TOKEN,
+            hasSheetId: !!process.env.SHEET_ID,
+            hasCalendarId: !!process.env.CALENDAR_ID,
+            hasOwnerEmail: !!process.env.CALENDAR_OWNER_EMAIL
+        }
+    });
 });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
-  console.log(`📊 Google Sheet ID: ${process.env.SHEET_ID}`);
-  console.log(`📅 Calendar ID: ${process.env.CALENDAR_ID}`);
-  console.log(`📧 Email User: ${process.env.EMAIL_USER}`);
+    console.log(`🚀 Servidor corriendo en el puerto ${PORT}`);
 });
