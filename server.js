@@ -25,7 +25,7 @@ let calendar;
 
 try {
     console.log('✅ Inicializando autenticación OAuth 2.0...');
-    
+
     const clientId = process.env.OAUTH_CLIENT_ID;
     const clientSecret = process.env.OAUTH_CLIENT_SECRET;
     const refreshToken = process.env.OAUTH_REFRESH_TOKEN;
@@ -47,7 +47,7 @@ try {
     auth = oauth2Client;
     sheets = google.sheets({ version: 'v4', auth: oauth2Client });
     calendar = google.calendar({ version: 'v3', auth: oauth2Client });
-    
+
     console.log('✅ OAuth 2.0 configurado correctamente');
 
 } catch (error) {
@@ -69,15 +69,15 @@ const transporter = nodemailer.createTransport({
 });
 
 /**
- * Función para generar el HTML del email profesional
+ * Función para generar el HTML del email estilo Epic Games
  */
 function generarEmailHTML(datos) {
-    const { nombre, apellido, tipoCita, fechaFormateada, calendarLink, precio } = datos;
-    
+    const { nombre, apellido, tipoCita, fechaFormateada, calendarLink } = datos;
+
     const servicios = {
-        'consulta': { nombre: 'Consulta Nutricional', duracion: '60 minutos', precio: '50€' },
-        'seguimiento': { nombre: 'Seguimiento', duracion: '30 minutos', precio: '30€' },
-        'plan': { nombre: 'Plan Personalizado', duracion: '90 minutos', precio: '80€' }
+        'consulta': { nombre: 'Consulta Nutricional', duracion: '60 minutos', precio: '50€', emoji: '🥗' },
+        'seguimiento': { nombre: 'Seguimiento', duracion: '30 minutos', precio: '30€', emoji: '📊' },
+        'plan': { nombre: 'Plan Personalizado', duracion: '90 minutos', precio: '80€', emoji: '📋' }
     };
 
     const servicio = servicios[tipoCita] || servicios['consulta'];
@@ -88,175 +88,130 @@ function generarEmailHTML(datos) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Confirmación de Cita - Eva Vidal Nutrición</title>
 </head>
-<body style="margin: 0; padding: 0; font-family: 'Arial', sans-serif; background-color: #f5f5f5;">
-    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 40px 20px;">
-        <tr>
-            <td align="center">
-                <!-- Contenedor principal -->
-                <table width="600" cellpadding="0" cellspacing="0" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 20px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.1);">
+<body style="margin: 0; padding: 0; background-color: #0a0e27; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+    
+    <!-- Contenedor principal -->
+    <div style="max-width: 600px; margin: 0 auto; background-color: #0a0e27;">
+        
+        <!-- Header con gradiente -->
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 0; margin: 0;">
+            <div style="text-align: center; padding: 40px 20px;">
+                <img src="https://i.postimg.cc/JhmhZ1bh/Eva-Vidal.png" alt="Eva Vidal" style="width: 120px; height: auto; display: block; margin: 0 auto 20px auto;">
+                <h1 style="color: #ffffff; font-size: 32px; font-weight: 800; margin: 0; letter-spacing: -0.5px;">RESERVA CONFIRMADA</h1>
+            </div>
+        </div>
+
+        <!-- Banner de estado -->
+        <div style="background-color: #10b981; padding: 16px; text-align: center;">
+            <p style="margin: 0; color: #ffffff; font-size: 15px; font-weight: 600; letter-spacing: 0.5px;">✓ PAGO RECIBIDO • CITA GARANTIZADA</p>
+        </div>
+
+        <!-- Contenido principal -->
+        <div style="background-color: #1a1f3a; padding: 0;">
+            
+            <!-- Saludo -->
+            <div style="padding: 40px 30px 30px 30px;">
+                <p style="color: #ffffff; font-size: 18px; margin: 0 0 10px 0; font-weight: 600;">Hola ${nombre},</p>
+                <p style="color: #94a3b8; font-size: 15px; margin: 0; line-height: 1.6;">Tu cita ha sido confirmada exitosamente. Aquí están todos los detalles de tu reserva:</p>
+            </div>
+
+            <!-- Card de servicio -->
+            <div style="margin: 0 30px 30px 30px; background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%); border: 2px solid #667eea; border-radius: 12px; overflow: hidden;">
+                
+                <!-- Header del card -->
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; text-align: center;">
+                    <div style="font-size: 40px; margin-bottom: 10px;">${servicio.emoji}</div>
+                    <h2 style="color: #ffffff; font-size: 22px; margin: 0; font-weight: 700;">${servicio.nombre}</h2>
+                </div>
+
+                <!-- Detalles del servicio -->
+                <div style="padding: 25px;">
                     
-                    <!-- Header con logo -->
-                    <tr>
-                        <td align="center" style="padding: 40px 40px 30px 40px;">
-                            <img src="https://i.postimg.cc/JhmhZ1bh/Eva-Vidal.png" alt="Eva Vidal Nutrición" style="width: 150px; height: auto; margin-bottom: 20px;">
-                            <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 700;">¡Cita Confirmada!</h1>
-                        </td>
-                    </tr>
+                    <!-- Fecha y hora -->
+                    <div style="margin-bottom: 20px;">
+                        <div style="display: inline-block; background-color: #667eea; color: #ffffff; padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 8px;">FECHA Y HORA</div>
+                        <p style="color: #ffffff; font-size: 18px; margin: 0; font-weight: 600;">${fechaFormateada}</p>
+                    </div>
 
-                    <!-- Contenido principal -->
-                    <tr>
-                        <td style="background-color: white; padding: 40px;">
-                            <p style="color: #333; font-size: 18px; margin: 0 0 20px 0;">Hola <strong>${nombre}</strong>,</p>
-                            
-                            <p style="color: #666; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0;">
-                                Tu cita ha sido <strong style="color: #667eea;">confirmada exitosamente</strong>. Estamos emocionados de acompañarte en tu camino hacia una mejor nutrición y bienestar.
-                            </p>
+                    <!-- Duración -->
+                    <div style="margin-bottom: 20px;">
+                        <div style="display: inline-block; background-color: #764ba2; color: #ffffff; padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 8px;">DURACIÓN</div>
+                        <p style="color: #ffffff; font-size: 18px; margin: 0; font-weight: 600;">${servicio.duracion}</p>
+                    </div>
 
-                            <!-- Tarjeta de detalles de la cita -->
-                            <table width="100%" cellpadding="0" cellspacing="0" style="background: linear-gradient(135deg, #667eea15, #764ba215); border-radius: 15px; margin-bottom: 30px;">
-                                <tr>
-                                    <td style="padding: 25px;">
-                                        <h2 style="color: #667eea; font-size: 20px; margin: 0 0 20px 0; font-weight: 700;">📋 Detalles de tu cita</h2>
-                                        
-                                        <table width="100%" cellpadding="8" cellspacing="0">
-                                            <tr>
-                                                <td style="color: #666; font-size: 15px; padding: 8px 0;">
-                                                    <strong>🎯 Servicio:</strong>
-                                                </td>
-                                                <td style="color: #333; font-size: 15px; padding: 8px 0; text-align: right;">
-                                                    ${servicio.nombre}
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td style="color: #666; font-size: 15px; padding: 8px 0;">
-                                                    <strong>📅 Fecha y Hora:</strong>
-                                                </td>
-                                                <td style="color: #333; font-size: 15px; padding: 8px 0; text-align: right;">
-                                                    ${fechaFormateada}
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td style="color: #666; font-size: 15px; padding: 8px 0;">
-                                                    <strong>⏱️ Duración:</strong>
-                                                </td>
-                                                <td style="color: #333; font-size: 15px; padding: 8px 0; text-align: right;">
-                                                    ${servicio.duracion}
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td style="color: #666; font-size: 15px; padding: 8px 0; border-top: 2px solid #667eea30; padding-top: 15px;">
-                                                    <strong>💰 Inversión:</strong>
-                                                </td>
-                                                <td style="color: #667eea; font-size: 18px; font-weight: 700; padding: 8px 0; text-align: right; border-top: 2px solid #667eea30; padding-top: 15px;">
-                                                    ${servicio.precio}
-                                                </td>
-                                            </tr>
-                                        </table>
-                                    </td>
-                                </tr>
-                            </table>
+                    <!-- Precio -->
+                    <div style="border-top: 1px solid #667eea40; padding-top: 20px;">
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                            <span style="color: #94a3b8; font-size: 14px; font-weight: 600;">INVERSIÓN TOTAL</span>
+                            <span style="color: #10b981; font-size: 28px; font-weight: 800;">${servicio.precio}</span>
+                        </div>
+                    </div>
 
-                            <!-- Información de pago -->
-                            <table width="100%" cellpadding="0" cellspacing="0" style="background: #f8f9fa; border-left: 4px solid #11998e; border-radius: 8px; margin-bottom: 30px;">
-                                <tr>
-                                    <td style="padding: 20px;">
-                                        <p style="margin: 0; color: #11998e; font-weight: 700; font-size: 16px; margin-bottom: 8px;">✅ Pago Procesado</p>
-                                        <p style="margin: 0; color: #666; font-size: 14px; line-height: 1.5;">
-                                            El pago de <strong>${servicio.precio}</strong> ha sido recibido correctamente. Te enviaremos la factura por separado en las próximas 24 horas.
-                                        </p>
-                                    </td>
-                                </tr>
-                            </table>
+                </div>
+            </div>
 
-                            <!-- Botón de calendario -->
-                            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 30px;">
-                                <tr>
-                                    <td align="center">
-                                        <a href="${calendarLink}" style="display: inline-block; background: linear-gradient(135deg, #667eea, #764ba2); color: white; text-decoration: none; padding: 16px 40px; border-radius: 10px; font-weight: 700; font-size: 16px; box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);">
-                                            📅 Añadir a mi Calendario
-                                        </a>
-                                    </td>
-                                </tr>
-                            </table>
+            <!-- Botón de calendario -->
+            <div style="padding: 0 30px 30px 30px;">
+                <a href="${calendarLink}" style="display: block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; text-align: center; padding: 18px; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 16px; letter-spacing: 0.5px; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);">
+                    📅 AÑADIR A MI CALENDARIO
+                </a>
+            </div>
 
-                            <!-- Recordatorios -->
-                            <table width="100%" cellpadding="0" cellspacing="0" style="background: #fff8e1; border-radius: 8px; margin-bottom: 25px;">
-                                <tr>
-                                    <td style="padding: 20px;">
-                                        <p style="margin: 0 0 15px 0; color: #f57c00; font-weight: 700; font-size: 15px;">⏰ Recordatorios Automáticos</p>
-                                        <ul style="margin: 0; padding-left: 20px; color: #666; font-size: 14px; line-height: 1.8;">
-                                            <li>Recibirás un recordatorio <strong>24 horas antes</strong> por email</li>
-                                            <li>Una notificación <strong>10 minutos antes</strong> de la cita</li>
-                                            <li>El evento se ha añadido automáticamente a tu calendario</li>
-                                        </ul>
-                                    </td>
-                                </tr>
-                            </table>
+            <!-- Información importante -->
+            <div style="margin: 0 30px 30px 30px; background-color: #0f1629; border-left: 4px solid #f59e0b; padding: 20px; border-radius: 8px;">
+                <h3 style="color: #f59e0b; font-size: 14px; margin: 0 0 12px 0; font-weight: 700; letter-spacing: 0.5px;">⚡ RECORDATORIOS AUTOMÁTICOS</h3>
+                <ul style="color: #94a3b8; font-size: 14px; margin: 0; padding-left: 20px; line-height: 1.8;">
+                    <li>Email 24 horas antes de tu cita</li>
+                    <li>Notificación 10 minutos antes</li>
+                    <li>Evento añadido a tu calendario</li>
+                </ul>
+            </div>
 
-                            <!-- Preparación para la cita -->
-                            <div style="border-top: 2px solid #f0f0f0; padding-top: 25px; margin-top: 25px;">
-                                <h3 style="color: #667eea; font-size: 18px; margin: 0 0 15px 0;">📝 Preparación para tu cita</h3>
-                                <ul style="color: #666; font-size: 14px; line-height: 1.8; margin: 0; padding-left: 20px;">
-                                    <li>Llega 5 minutos antes si es presencial</li>
-                                    <li>Ten a mano cualquier análisis o informe médico reciente</li>
-                                    <li>Prepara una lista de tus objetivos nutricionales</li>
-                                    <li>Si es online, verifica tu conexión a internet</li>
-                                </ul>
-                            </div>
+            <!-- Preparación -->
+            <div style="margin: 0 30px 40px 30px; background-color: #0f1629; padding: 20px; border-radius: 8px;">
+                <h3 style="color: #ffffff; font-size: 14px; margin: 0 0 12px 0; font-weight: 700; letter-spacing: 0.5px;">📋 PREPÁRATE PARA TU CITA</h3>
+                <ul style="color: #94a3b8; font-size: 14px; margin: 0; padding-left: 20px; line-height: 1.8;">
+                    <li>Llega 5 minutos antes</li>
+                    <li>Ten a mano análisis médicos recientes</li>
+                    <li>Prepara tus objetivos nutricionales</li>
+                    <li>Verifica tu conexión si es online</li>
+                </ul>
+            </div>
 
-                            <p style="color: #666; font-size: 14px; line-height: 1.6; margin: 30px 0 0 0;">
-                                Si necesitas <strong>modificar o cancelar</strong> tu cita, por favor contáctanos con al menos <strong>24 horas de antelación</strong>.
-                            </p>
-                        </td>
-                    </tr>
+        </div>
 
-                    <!-- Footer -->
-                    <tr>
-                        <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px 40px; text-align: center;">
-                            <p style="color: white; margin: 0 0 15px 0; font-size: 16px; font-weight: 600;">¿Tienes alguna pregunta?</p>
-                            <p style="color: rgba(255,255,255,0.9); margin: 0 0 20px 0; font-size: 14px;">Estamos aquí para ayudarte</p>
-                            
-                            <table width="100%" cellpadding="0" cellspacing="0">
-                                <tr>
-                                    <td align="center">
-                                        <a href="tel:644137667" style="color: white; text-decoration: none; font-size: 18px; font-weight: 700; display: inline-block; margin: 0 15px;">
-                                            📞 644 137 667
-                                        </a>
-                                        <a href="mailto:japaradah@gmail.com" style="color: white; text-decoration: none; font-size: 16px; display: inline-block; margin: 0 15px;">
-                                            📧 Email
-                                        </a>
-                                    </td>
-                                </tr>
-                            </table>
+        <!-- Footer -->
+        <div style="background-color: #0a0e27; padding: 30px; text-align: center; border-top: 1px solid #1a1f3a;">
+            
+            <h3 style="color: #ffffff; font-size: 16px; margin: 0 0 15px 0; font-weight: 600;">¿Necesitas ayuda?</h3>
+            
+            <div style="margin-bottom: 25px;">
+                <a href="tel:644137667" style="display: inline-block; background-color: #1a1f3a; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px; margin: 0 8px 8px 8px; border: 1px solid #667eea;">
+                    📞 644 137 667
+                </a>
+                <a href="mailto:japaradah@gmail.com" style="display: inline-block; background-color: #1a1f3a; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px; margin: 0 8px 8px 8px; border: 1px solid #667eea;">
+                    📧 Email
+                </a>
+            </div>
 
-                            <div style="margin-top: 25px; padding-top: 25px; border-top: 1px solid rgba(255,255,255,0.3);">
-                                <p style="color: rgba(255,255,255,0.8); margin: 0; font-size: 13px;">
-                                    Eva Vidal - Nutrición y Bienestar
-                                </p>
-                                <p style="color: rgba(255,255,255,0.7); margin: 8px 0 0 0; font-size: 12px;">
-                                    © ${new Date().getFullYear()} Todos los derechos reservados
-                                </p>
-                            </div>
-                        </td>
-                    </tr>
-                </table>
+            <div style="border-top: 1px solid #1a1f3a; padding-top: 20px; margin-top: 20px;">
+                <p style="color: #667eea; font-size: 15px; margin: 0 0 8px 0; font-weight: 600;">Eva Vidal</p>
+                <p style="color: #64748b; font-size: 13px; margin: 0;">Nutrición y Bienestar</p>
+                <p style="color: #475569; font-size: 11px; margin: 12px 0 0 0;">© ${new Date().getFullYear()} Todos los derechos reservados</p>
+            </div>
+        </div>
 
-                <!-- Nota final -->
-                <table width="600" cellpadding="0" cellspacing="0" style="margin-top: 20px;">
-                    <tr>
-                        <td align="center">
-                            <p style="color: #999; font-size: 12px; line-height: 1.5; margin: 0;">
-                                Este es un correo automático generado por el sistema de reservas.<br>
-                                Por favor no respondas directamente a este mensaje.
-                            </p>
-                        </td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-    </table>
+        <!-- Nota legal -->
+        <div style="background-color: #0a0e27; padding: 20px 30px; text-align: center;">
+            <p style="color: #475569; font-size: 11px; line-height: 1.6; margin: 0;">
+                Este es un mensaje automático. Por favor no respondas a este correo.<br>
+                Para modificar o cancelar tu cita, contacta con nosotros con 24h de antelación.
+            </p>
+        </div>
+
+    </div>
+
 </body>
 </html>
     `;
@@ -293,9 +248,9 @@ app.post('/check-availability', async (req, res) => {
     const { date, type } = req.body;
 
     if (!date || !type) {
-        return res.status(400).json({ 
-            success: false, 
-            message: 'Faltan parámetros de fecha o tipo de cita.' 
+        return res.status(400).json({
+            success: false,
+            message: 'Faltan parámetros de fecha o tipo de cita.'
         });
     }
 
@@ -311,7 +266,7 @@ app.post('/check-availability', async (req, res) => {
 
     try {
         const isAvailable = await isTimeSlotAvailable(
-            startTime.toISOString(), 
+            startTime.toISOString(),
             endTime.toISOString()
         );
         res.json({ success: true, isAvailable });
@@ -359,7 +314,7 @@ app.post('/reservar', async (req, res) => {
 
         // 2. Verificar disponibilidad
         const isAvailable = await isTimeSlotAvailable(
-            startTime.toISOString(), 
+            startTime.toISOString(),
             endTime.toISOString()
         );
 
@@ -430,8 +385,8 @@ app.post('/reservar', async (req, res) => {
 
         console.log('✅ Datos guardados en Sheets');
 
-        // 5. Enviar email de confirmación PROFESIONAL
-        const fechaFormateada = startTime.toLocaleString('es-ES', { 
+        // 5. Enviar email estilo Epic Games
+        const fechaFormateada = startTime.toLocaleString('es-ES', {
             timeZone: 'Europe/Madrid',
             weekday: 'long',
             year: 'numeric',
@@ -450,9 +405,9 @@ app.post('/reservar', async (req, res) => {
         });
 
         const mailOptions = {
-            from: `"Eva Vidal - Nutrición y Bienestar" <${process.env.EMAIL_USER}>`,
+            from: `"Eva Vidal - Nutrición" <${process.env.EMAIL_USER}>`,
             to: email,
-            subject: '✅ Confirmación de Cita - Eva Vidal Nutrición',
+            subject: '✅ Reserva Confirmada - Eva Vidal Nutrición',
             html: emailHTML
         };
 

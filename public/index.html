@@ -14,7 +14,7 @@
 
         body {
             font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #60a5fa 100%);
             min-height: 100vh;
             overflow-x: hidden;
             position: relative;
@@ -27,7 +27,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #60a5fa 100%);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -165,7 +165,7 @@
             }
         }
 
-        /* ===== RESTO DEL CÓDIGO ORIGINAL ===== */
+        /* ===== EFECTOS DE FONDO ===== */
         body::before {
             content: '';
             position: fixed;
@@ -173,7 +173,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: radial-gradient(circle at 20% 50%, rgba(102, 126, 234, 0.3) 0%, transparent 50%);
+            background: radial-gradient(circle at 20% 50%, rgba(96, 165, 250, 0.3) 0%, transparent 50%);
             animation: gradientShift 15s ease infinite;
         }
 
@@ -193,7 +193,7 @@
             position: fixed;
             border-radius: 50%;
             filter: blur(100px);
-            opacity: 0.5;
+            opacity: 0.4;
             animation: floatOrb 20s infinite ease-in-out;
             pointer-events: none;
         }
@@ -201,7 +201,7 @@
         .orb1 {
             width: 600px;
             height: 600px;
-            background: radial-gradient(circle, #ff6b9d, #c471ed);
+            background: radial-gradient(circle, #3b82f6, #1e3a8a);
             top: -200px;
             left: -200px;
         }
@@ -209,7 +209,7 @@
         .orb2 {
             width: 500px;
             height: 500px;
-            background: radial-gradient(circle, #4facfe, #00f2fe);
+            background: radial-gradient(circle, #60a5fa, #2563eb);
             bottom: -150px;
             right: -150px;
             animation-delay: 7s;
@@ -218,7 +218,7 @@
         .orb3 {
             width: 450px;
             height: 450px;
-            background: radial-gradient(circle, #f093fb, #f5576c);
+            background: radial-gradient(circle, #93c5fd, #3b82f6);
             top: 50%;
             left: 50%;
             animation-delay: 14s;
@@ -238,26 +238,27 @@
             }
         }
 
+        /* ===== BOTÓN DE AYUDA ===== */
         .help-button {
             position: fixed;
             bottom: 30px;
             right: 30px;
             width: 70px;
             height: 70px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: linear-gradient(135deg, #1e3a8a, #3b82f6);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            box-shadow: 0 10px 40px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 10px 40px rgba(30, 58, 138, 0.4);
             z-index: 1000;
             transition: all 0.3s ease;
         }
 
             .help-button:hover {
                 transform: scale(1.1);
-                box-shadow: 0 15px 50px rgba(102, 126, 234, 0.6);
+                box-shadow: 0 15px 50px rgba(30, 58, 138, 0.6);
             }
 
             .help-button::before {
@@ -302,7 +303,7 @@
             }
 
         .help-notification h4 {
-            color: #667eea;
+            color: #1e3a8a;
             margin-bottom: 10px;
             font-size: 18px;
         }
@@ -317,7 +318,7 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: linear-gradient(135deg, #1e3a8a, #3b82f6);
             color: white;
             padding: 12px 20px;
             border-radius: 12px;
@@ -328,26 +329,28 @@
 
             .help-phone:hover {
                 transform: translateX(5px);
-                box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+                box-shadow: 0 5px 15px rgba(30, 58, 138, 0.4);
             }
 
+        /* ===== CONTENEDOR PRINCIPAL ===== */
         .container {
-            max-width: 1400px;
+            max-width: 1600px;
             margin: 0 auto;
-            padding: 60px 20px;
+            padding: 40px 20px;
             position: relative;
             z-index: 10;
         }
 
+        /* ===== HEADER COMPACTO ===== */
         .header {
             text-align: center;
-            margin-bottom: 80px;
+            margin-bottom: 40px;
             animation: fadeInDown 1.2s ease-out;
         }
 
         .logo-container {
             display: inline-block;
-            margin-bottom: 40px;
+            margin-bottom: 20px;
             position: relative;
         }
 
@@ -356,9 +359,9 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 280px;
-            height: 280px;
-            background: radial-gradient(circle, rgba(102, 126, 234, 0.4), transparent);
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.4), transparent);
             border-radius: 50%;
             filter: blur(40px);
             animation: glowPulse 3s ease-in-out infinite;
@@ -377,158 +380,163 @@
         }
 
         .logo-img {
-            width: 250px;
+            width: 150px;
             height: auto;
             position: relative;
             z-index: 2;
-            filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.2));
-            animation: gentleFloat 5s ease-in-out infinite;
-        }
-
-        @keyframes gentleFloat {
-            0%, 100% {
-                transform: translateY(0px) rotate(0deg);
-            }
-
-            25% {
-                transform: translateY(-15px) rotate(2deg);
-            }
-
-            75% {
-                transform: translateY(-10px) rotate(-2deg);
-            }
+            filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.3));
         }
 
         h1 {
             font-family: 'Playfair Display', serif;
-            font-size: 64px;
+            font-size: 48px;
             font-weight: 800;
-            background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 20px;
-            text-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            letter-spacing: -2px;
+            color: white;
+            margin-bottom: 10px;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            letter-spacing: -1px;
         }
 
         .subtitle {
-            font-size: 22px;
+            font-size: 18px;
             color: rgba(255, 255, 255, 0.95);
             font-weight: 300;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
         }
 
+        /* ===== CARD PRINCIPAL ===== */
         .glass-card {
-            background: rgba(255, 255, 255, 0.25);
-            backdrop-filter: blur(30px) saturate(180%);
-            border-radius: 40px;
-            padding: 60px;
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 30px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.5);
             animation: fadeInUp 1s ease-out;
-            position: relative;
-            overflow: hidden;
         }
 
+        /* ===== GRID DE 2 COLUMNAS ===== */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            gap: 40px;
+            margin-bottom: 30px;
+        }
+
+        /* ===== COLUMNA IZQUIERDA: SERVICIOS ===== */
         .services-section {
-            margin-bottom: 50px;
             position: relative;
-            z-index: 1;
         }
 
         .section-title {
-            color: white;
-            font-size: 28px;
+            color: #1e3a8a;
+            font-size: 24px;
             font-weight: 700;
-            margin-bottom: 35px;
+            margin-bottom: 25px;
             text-align: center;
-            text-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
         }
 
         .services-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 30px;
-            margin-bottom: 50px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
         }
 
         .service-card {
-            background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(20px);
-            border-radius: 25px;
-            padding: 40px;
+            background: linear-gradient(135deg, #f8fafc 0%, #e0f2fe 100%);
+            border-radius: 20px;
+            padding: 25px;
             cursor: pointer;
-            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            border: 2px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 3px solid transparent;
             position: relative;
             overflow: hidden;
         }
 
-            .service-card:hover {
-                transform: translateY(-20px) scale(1.05);
-                box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
-                border-color: rgba(255, 255, 255, 0.6);
+            .service-card::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(135deg, #1e3a8a15, #3b82f615);
+                opacity: 0;
+                transition: opacity 0.3s;
             }
+
+            .service-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 15px 40px rgba(30, 58, 138, 0.2);
+                border-color: #3b82f6;
+            }
+
+                .service-card:hover::before {
+                    opacity: 1;
+                }
 
             .service-card.active {
-                background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.85));
-                border-color: white;
-                transform: translateY(-20px) scale(1.08);
-                box-shadow: 0 35px 70px rgba(0, 0, 0, 0.4);
+                background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+                border-color: #1e3a8a;
+                transform: translateY(-5px) scale(1.02);
+                box-shadow: 0 20px 50px rgba(30, 58, 138, 0.4);
             }
 
+                .service-card.active::before {
+                    opacity: 0;
+                }
+
         .service-icon {
-            font-size: 48px;
-            margin-bottom: 20px;
+            font-size: 36px;
+            margin-bottom: 15px;
             display: block;
         }
 
         .service-name {
-            font-size: 24px;
+            font-size: 20px;
             font-weight: 700;
-            color: white;
-            margin-bottom: 12px;
+            color: #1e3a8a;
+            margin-bottom: 10px;
             transition: color 0.3s;
         }
 
         .service-card.active .service-name {
-            color: #667eea;
+            color: white;
         }
 
         .service-duration {
-            font-size: 16px;
-            color: rgba(255, 255, 255, 0.9);
-            margin-bottom: 15px;
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 12px;
             transition: color 0.3s;
         }
 
         .service-card.active .service-duration {
-            color: #764ba2;
+            color: rgba(255, 255, 255, 0.9);
         }
 
         .service-price {
-            font-size: 38px;
+            font-size: 32px;
             font-weight: 800;
-            color: white;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            color: #1e3a8a;
             transition: color 0.3s;
         }
 
         .service-card.active .service-price {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: white;
+        }
+
+        /* ===== COLUMNA DERECHA: FORMULARIO Y HORARIOS ===== */
+        .right-column {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
         }
 
         .form-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 25px;
-            margin-bottom: 50px;
-            position: relative;
-            z-index: 1;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
         }
 
         .input-group {
@@ -537,99 +545,98 @@
 
         .input-icon {
             position: absolute;
-            left: 25px;
+            left: 20px;
             top: 50%;
             transform: translateY(-50%);
-            font-size: 24px;
+            font-size: 20px;
+            color: #64748b;
             z-index: 2;
         }
 
         input {
             width: 100%;
-            padding: 22px 25px 22px 65px;
-            background: rgba(255, 255, 255, 0.3);
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(255, 255, 255, 0.4);
-            border-radius: 20px;
-            color: white;
-            font-size: 17px;
-            transition: all 0.4s ease;
+            padding: 18px 20px 18px 55px;
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 15px;
+            color: #1e293b;
+            font-size: 16px;
+            transition: all 0.3s ease;
             outline: none;
             font-weight: 500;
         }
 
             input::placeholder {
-                color: rgba(255, 255, 255, 0.7);
+                color: #94a3b8;
             }
 
             input:focus {
-                border-color: white;
-                background: rgba(255, 255, 255, 0.4);
-                transform: translateY(-5px);
-                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+                border-color: #3b82f6;
+                background: white;
+                box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
             }
 
+        /* ===== SECCIÓN DE HORARIOS ===== */
         .time-section {
-            margin-bottom: 50px;
             position: relative;
-            z-index: 1;
         }
 
         .time-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-            gap: 18px;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 12px;
         }
 
         .time-slot {
-            padding: 18px;
-            background: rgba(255, 255, 255, 0.25);
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 15px;
-            color: white;
-            font-weight: 700;
-            font-size: 16px;
+            padding: 14px;
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            color: #1e293b;
+            font-weight: 600;
+            font-size: 15px;
             cursor: pointer;
-            transition: all 0.4s;
+            transition: all 0.3s;
             text-align: center;
         }
 
             .time-slot:hover {
-                background: rgba(255, 255, 255, 0.4);
-                transform: translateY(-8px) scale(1.08);
-                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-                border-color: white;
+                background: #e0f2fe;
+                transform: translateY(-3px);
+                border-color: #3b82f6;
+                box-shadow: 0 8px 20px rgba(59, 130, 246, 0.2);
             }
 
             .time-slot.active {
-                background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.85));
-                color: #667eea;
-                border-color: white;
-                transform: translateY(-8px) scale(1.12);
-                box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
+                background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+                color: white;
+                border-color: #1e3a8a;
+                transform: translateY(-3px);
+                box-shadow: 0 10px 30px rgba(30, 58, 138, 0.4);
             }
 
+        /* ===== BOTÓN DE ENVÍO ===== */
         .submit-btn {
             width: 100%;
-            padding: 28px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            padding: 22px;
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #60a5fa 100%);
             background-size: 200% 200%;
             border: none;
-            border-radius: 20px;
+            border-radius: 15px;
             color: white;
-            font-size: 22px;
+            font-size: 18px;
             font-weight: 700;
             cursor: pointer;
-            transition: all 0.5s ease;
-            box-shadow: 0 15px 50px rgba(102, 126, 234, 0.5);
+            transition: all 0.4s ease;
+            box-shadow: 0 10px 30px rgba(30, 58, 138, 0.3);
             text-transform: uppercase;
-            letter-spacing: 2px;
+            letter-spacing: 1px;
         }
 
             .submit-btn:hover {
-                transform: translateY(-10px) scale(1.03);
-                box-shadow: 0 25px 70px rgba(102, 126, 234, 0.7);
+                transform: translateY(-3px);
+                box-shadow: 0 15px 40px rgba(30, 58, 138, 0.5);
+                background-position: right center;
             }
 
             .submit-btn:disabled {
@@ -638,10 +645,11 @@
                 transform: none;
             }
 
+        /* ===== MENSAJE DE ÉXITO ===== */
         .success-message {
             display: none;
             text-align: center;
-            padding: 80px;
+            padding: 60px;
         }
 
             .success-message.show {
@@ -649,54 +657,67 @@
             }
 
         .success-icon {
-            width: 120px;
-            height: 120px;
-            background: linear-gradient(135deg, #11998e, #38ef7d);
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #10b981, #059669);
             border-radius: 50%;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 40px;
+            margin-bottom: 30px;
             position: relative;
+            animation: successPop 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
         }
 
-            .success-icon::before {
-                content: "✓";
-                font-size: 70px;
-                color: white;
-                font-weight: bold;
+        @keyframes successPop {
+            0% {
+                transform: scale(0);
             }
 
-        .success-title {
-            font-size: 42px;
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .success-icon::before {
+            content: "✓";
+            font-size: 60px;
             color: white;
+            font-weight: bold;
+        }
+
+        .success-title {
+            font-size: 36px;
+            color: #1e3a8a;
             font-weight: 800;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             font-family: 'Playfair Display', serif;
         }
 
         .success-text {
-            font-size: 20px;
-            color: rgba(255, 255, 255, 0.95);
+            font-size: 18px;
+            color: #64748b;
         }
 
+        /* ===== FOOTER ===== */
         .info-footer {
             text-align: center;
-            margin-top: 50px;
-            color: rgba(255, 255, 255, 0.9);
-            font-size: 15px;
+            margin-top: 30px;
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 14px;
             position: relative;
             z-index: 1;
         }
 
             .info-footer p {
-                margin: 12px 0;
+                margin: 10px 0;
             }
 
+        /* ===== ANIMACIONES ===== */
         @keyframes fadeInDown {
             from {
                 opacity: 0;
-                transform: translateY(-50px);
+                transform: translateY(-30px);
             }
 
             to {
@@ -708,7 +729,7 @@
         @keyframes fadeInUp {
             from {
                 opacity: 0;
-                transform: translateY(50px);
+                transform: translateY(30px);
             }
 
             to {
@@ -717,13 +738,33 @@
             }
         }
 
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1200px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .services-grid {
+                flex-direction: row;
+                overflow-x: auto;
+            }
+
+            .service-card {
+                min-width: 280px;
+            }
+
+            .time-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
         @media (max-width: 768px) {
             h1 {
-                font-size: 42px;
+                font-size: 36px;
             }
 
             .logo-img {
-                width: 180px;
+                width: 120px;
             }
 
             .loading-logo {
@@ -731,10 +772,10 @@
             }
 
             .glass-card {
-                padding: 35px 25px;
+                padding: 25px 20px;
             }
 
-            .services-grid {
+            .form-grid {
                 grid-template-columns: 1fr;
             }
 
@@ -753,6 +794,14 @@
                 bottom: 100px;
                 right: 20px;
                 max-width: 250px;
+            }
+
+            .services-grid {
+                flex-direction: column;
+            }
+
+            .service-card {
+                min-width: 100%;
             }
         }
     </style>
@@ -806,58 +855,70 @@
         <div class="glass-card">
             <!-- Form Container -->
             <div id="formContainer">
-                <!-- Services Section -->
-                <div class="services-section">
-                    <h2 class="section-title">✨ Selecciona tu Servicio</h2>
-                    <div class="services-grid">
-                        <div class="service-card" data-service="consulta">
-                            <span class="service-icon">🥗</span>
-                            <h3 class="service-name">Consulta Nutricional</h3>
-                            <p class="service-duration">⏱️ 60 minutos</p>
-                            <p class="service-price">50€</p>
+                <!-- Grid de 2 Columnas -->
+                <div class="main-grid">
+
+                    <!-- COLUMNA IZQUIERDA: Servicios -->
+                    <div class="services-section">
+                        <h2 class="section-title">✨ Selecciona tu Servicio</h2>
+                        <div class="services-grid">
+                            <div class="service-card" data-service="consulta">
+                                <span class="service-icon">🥗</span>
+                                <h3 class="service-name">Consulta Nutricional</h3>
+                                <p class="service-duration">⏱️ 60 minutos</p>
+                                <p class="service-price">50€</p>
+                            </div>
+                            <div class="service-card" data-service="seguimiento">
+                                <span class="service-icon">📊</span>
+                                <h3 class="service-name">Seguimiento</h3>
+                                <p class="service-duration">⏱️ 30 minutos</p>
+                                <p class="service-price">30€</p>
+                            </div>
+                            <div class="service-card" data-service="plan">
+                                <span class="service-icon">📋</span>
+                                <h3 class="service-name">Plan Personalizado</h3>
+                                <p class="service-duration">⏱️ 90 minutos</p>
+                                <p class="service-price">80€</p>
+                            </div>
                         </div>
-                        <div class="service-card" data-service="seguimiento">
-                            <span class="service-icon">📊</span>
-                            <h3 class="service-name">Seguimiento</h3>
-                            <p class="service-duration">⏱️ 30 minutos</p>
-                            <p class="service-price">30€</p>
+                    </div>
+
+                    <!-- COLUMNA DERECHA: Formulario y Horarios -->
+                    <div class="right-column">
+
+                        <!-- Datos Personales -->
+                        <div>
+                            <h2 class="section-title">👤 Tus Datos</h2>
+                            <div class="form-grid">
+                                <div class="input-group">
+                                    <span class="input-icon">👤</span>
+                                    <input type="text" id="name" placeholder="Nombre completo" required>
+                                </div>
+                                <div class="input-group">
+                                    <span class="input-icon">📧</span>
+                                    <input type="email" id="email" placeholder="Email" required>
+                                </div>
+                                <div class="input-group">
+                                    <span class="input-icon">📱</span>
+                                    <input type="tel" id="phone" placeholder="Teléfono" required>
+                                </div>
+                                <div class="input-group">
+                                    <span class="input-icon">📅</span>
+                                    <input type="date" id="date" required>
+                                </div>
+                            </div>
                         </div>
-                        <div class="service-card" data-service="plan">
-                            <span class="service-icon">📋</span>
-                            <h3 class="service-name">Plan Personalizado</h3>
-                            <p class="service-duration">⏱️ 90 minutos</p>
-                            <p class="service-price">80€</p>
+
+                        <!-- Horarios -->
+                        <div class="time-section">
+                            <h2 class="section-title">⏰ Elige tu Horario</h2>
+                            <div class="time-grid" id="timeGrid"></div>
                         </div>
+
                     </div>
                 </div>
 
-                <!-- Form Fields -->
-                <div class="form-grid">
-                    <div class="input-group">
-                        <span class="input-icon">👤</span>
-                        <input type="text" id="name" placeholder="Nombre completo" required>
-                    </div>
-                    <div class="input-group">
-                        <span class="input-icon">📧</span>
-                        <input type="email" id="email" placeholder="Email" required>
-                    </div>
-                    <div class="input-group">
-                        <span class="input-icon">📱</span>
-                        <input type="tel" id="phone" placeholder="Teléfono" required>
-                    </div>
-                    <div class="input-group">
-                        <span class="input-icon">📅</span>
-                        <input type="date" id="date" required>
-                    </div>
-                </div>
-
-                <!-- Time Slots -->
-                <div class="time-section">
-                    <h2 class="section-title">⏰ Elige tu Horario</h2>
-                    <div class="time-grid" id="timeGrid"></div>
-                </div>
-
-                <!-- Submit Button -->
+                <!-- Botón de Confirmación -->
                 <button class="submit-btn" id="submitBtn" disabled>
                     Confirmar Reserva
                 </button>
@@ -882,7 +943,6 @@
         // ===== CONTROL DE PANTALLA DE CARGA =====
         let serverReady = false;
 
-        // Función para verificar si el servidor está activo
         async function checkServerHealth() {
             try {
                 const response = await fetch('/health', {
@@ -901,18 +961,15 @@
             return false;
         }
 
-        // Ocultar pantalla de carga
         function hideLoadingScreen() {
             const loadingScreen = document.getElementById('loadingScreen');
             loadingScreen.classList.add('hidden');
         }
 
-        // Intentar verificar el servidor al cargar
         async function initializeApp() {
             const isReady = await checkServerHealth();
 
             if (!isReady) {
-                // Si no está listo, reintentar cada 2 segundos
                 const interval = setInterval(async () => {
                     const ready = await checkServerHealth();
                     if (ready) {
@@ -920,7 +977,6 @@
                     }
                 }, 2000);
 
-                // Timeout máximo de 30 segundos
                 setTimeout(() => {
                     clearInterval(interval);
                     if (!serverReady) {
@@ -931,7 +987,6 @@
             }
         }
 
-        // Iniciar verificación
         initializeApp();
 
         // ===== CÓDIGO PRINCIPAL DEL FORMULARIO =====
@@ -1066,30 +1121,25 @@
 
         let helpShown = false;
 
-        // Show help notification after 5 seconds
         setTimeout(() => {
             if (!helpShown && serverReady) {
                 helpNotification.classList.add('show');
                 helpShown = true;
 
-                // Auto hide after 8 seconds
                 setTimeout(() => {
                     helpNotification.classList.remove('show');
                 }, 8000);
             }
         }, 5000);
 
-        // Toggle help notification on button click
         helpBtn.addEventListener('click', () => {
             helpNotification.classList.toggle('show');
         });
 
-        // Close help notification
         closeHelp.addEventListener('click', () => {
             helpNotification.classList.remove('show');
         });
 
-        // Show help notification periodically (every 30 seconds)
         setInterval(() => {
             if (!helpNotification.classList.contains('show') && serverReady) {
                 helpNotification.classList.add('show');
@@ -1101,6 +1151,3 @@
 
         // Initialize
         generateTimeSlots();
-    </script>
-</body>
-</html>
