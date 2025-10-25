@@ -21,42 +21,52 @@ app.use((req, res, next) => {
     next();
 });
 
-// Configurar Google Sheets y Calendar
+// Configurar Google Sheets y Calendar con Service Account
 let auth;
 try {
-    // *** LÓGICA DE AUTENTICACIÓN OAUTH 2.0 CON REFRESH TOKEN ***
-    const clientId = process.env.OAUTH_CLIENT_ID;
-    const clientSecret = process.env.OAUTH_CLIENT_SECRET;
-    const refreshToken = process.env.OAUTH_REFRESH_TOKEN;
+    console.log('✅ Inicializando autenticación con Service Account...');
 
-    if (clientId && clientSecret && refreshToken) {
-        console.log('✅ Usando autenticación OAuth 2.0 con Refresh Token');
+    // Leer credenciales desde el archivo
+    const credentialsPath = path.join(__dirname, 'credentials.json');
 
-        // 1. Inicializar el cliente OAuth
-        const oauth2Client = new google.auth.OAuth2(
-            clientId,
-            clientSecret,
-            'urn:ietf:wg:oauth:2.0:oob'
-        );
-
-        // 2. Establecer el refresh token
-        oauth2Client.setCredentials({ refresh_token: refreshToken });
-
-        auth = oauth2Client;
-
-    } else {
-        throw new Error('❌ Faltan credenciales de OAuth 2.0 (OAUTH_CLIENT_ID, OAUTH_CLIENT_SECRET, OAUTH_REFRESH_TOKEN) en .env');
+    if (!fs.existsSync(credentialsPath)) {
+        throw new Error('❌ No se encontró el archivo credentials.json');
     }
-    // *** FIN DE LÓGICA OAUTH 2.0 ***
+
+    const credentials = JSON.parse(fs.readFileSync(credentialsPath, 'utf8'));
+
+    // Crear cliente de autenticación
+    auth = new google.auth.GoogleAuth({
+        credentials: credentials,
+        scopes: [
+            'https://www.googleapis.com/auth/spreadsheets',
+            'https://www.googleapis.com/auth/calendar',
+            'https://www.googleapis.com/auth/calendar.events'
+        ]
+    });
+
+    console.log('✅ Service Account configurada correctamente');
 
 } catch (error) {
     console.error('❌ Error al configurar la autenticación de Google:', error.message);
     process.exit(1);
 }
 
-// Inicializar servicios de Google
-const sheets = google.sheets({ version: 'v4', auth });
-const calendar = google.calendar({ version: 'v3', auth });
+// Inicializar servicios de Google (se harán dinámicamente)
+let sheets, calendar;
+
+async function initializeGoogleServices() {
+    const authClient = await auth.getClient();
+    sheets = google.sheets({ version: 'v4', auth: authClient });
+    calendar = google.calendar({ version: 'v3', auth: authClient });
+    console.log('✅ Servicios de Google inicializados');
+}
+
+// Inicializar servicios al arrancar
+initializeGoogleServices().catch(err => {
+    console.error('❌ Error al inicializar servicios:', err.message);
+    process.exit(1);
+});
 
 const SHEET_ID = process.env.SHEET_ID;
 const CALENDAR_ID = process.env.CALENDAR_ID;
@@ -271,12 +281,10 @@ app.get('/health', (req, res) => {
         status: 'OK',
         timestamp: new Date().toISOString(),
         env: {
-            hasClientId: !!process.env.OAUTH_CLIENT_ID,
-            hasClientSecret: !!process.env.OAUTH_CLIENT_SECRET,
-            hasRefreshToken: !!process.env.OAUTH_REFRESH_TOKEN,
             hasSheetId: !!process.env.SHEET_ID,
             hasCalendarId: !!process.env.CALENDAR_ID,
-            hasOwnerEmail: !!process.env.CALENDAR_OWNER_EMAIL
+            hasOwnerEmail: !!process.env.CALENDAR_OWNER_EMAIL,
+            hasCredentials: fs.existsSync(path.join(__dirname, 'credentials.json'))
         }
     });
 });
