@@ -7,6 +7,11 @@ const path = require('path');
 require('dotenv').config();
 
 const app = express();
+
+// *** CORRECCIÓN CLAVE PARA RENDER: Sirve archivos estáticos (incluyendo index.html) ***
+// Esto soluciona el error "ENOENT: no such file or directory" y "Cannot GET /"
+app.use(express.static(__dirname));
+
 app.use(express.json());
 app.use(cors());
 
@@ -258,12 +263,6 @@ app.post('/reservar', async (req, res) => {
       error: error.message
     });
   }
-});
-
-
-// *** RUTA PARA SERVIR index.html (Soluciona Cannot GET /) ***
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 
