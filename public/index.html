@@ -20,17 +20,162 @@
             position: relative;
         }
 
-            /* Animated Gradient Background */
-            body::before {
-                content: '';
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: radial-gradient(circle at 20% 50%, rgba(102, 126, 234, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(118, 75, 162, 0.3) 0%, transparent 50%), radial-gradient(circle at 40% 20%, rgba(240, 147, 251, 0.3) 0%, transparent 50%);
-                animation: gradientShift 15s ease infinite;
+        /* ===== PANTALLA DE CARGA ===== */
+        #loadingScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.8s ease, visibility 0.8s ease;
+        }
+
+            #loadingScreen.hidden {
+                opacity: 0;
+                visibility: hidden;
             }
+
+        .loading-content {
+            text-align: center;
+            animation: fadeInScale 0.8s ease-out;
+        }
+
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .loading-logo {
+            width: 200px;
+            height: auto;
+            margin-bottom: 40px;
+            filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.3));
+            animation: floatLogo 3s ease-in-out infinite;
+        }
+
+        @keyframes floatLogo {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+
+        .loading-spinner {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 30px;
+            position: relative;
+        }
+
+        .spinner-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 4px solid transparent;
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+        }
+
+            .spinner-ring:nth-child(1) {
+                animation-delay: -0.45s;
+            }
+
+            .spinner-ring:nth-child(2) {
+                animation-delay: -0.3s;
+                border-top-color: rgba(255, 255, 255, 0.6);
+            }
+
+            .spinner-ring:nth-child(3) {
+                animation-delay: -0.15s;
+                border-top-color: rgba(255, 255, 255, 0.3);
+            }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading-text {
+            color: white;
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .loading-subtext {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 16px;
+            font-weight: 300;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .loading-dots::after {
+            content: '';
+            animation: dots 1.5s steps(4, end) infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% {
+                content: '';
+            }
+
+            40% {
+                content: '.';
+            }
+
+            60% {
+                content: '..';
+            }
+
+            80%, 100% {
+                content: '...';
+            }
+        }
+
+        /* ===== RESTO DEL CÓDIGO ORIGINAL ===== */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 50%, rgba(102, 126, 234, 0.3) 0%, transparent 50%);
+            animation: gradientShift 15s ease infinite;
+        }
 
         @keyframes gradientShift {
             0%, 100% {
@@ -44,7 +189,6 @@
             }
         }
 
-        /* Floating Orbs with Blur */
         .orb {
             position: fixed;
             border-radius: 50%;
@@ -60,7 +204,6 @@
             background: radial-gradient(circle, #ff6b9d, #c471ed);
             top: -200px;
             left: -200px;
-            animation-delay: 0s;
         }
 
         .orb2 {
@@ -95,31 +238,6 @@
             }
         }
 
-        /* Sparkle Effects */
-        .sparkle {
-            position: fixed;
-            width: 3px;
-            height: 3px;
-            background: white;
-            border-radius: 50%;
-            opacity: 0;
-            animation: sparkleAnim 3s infinite;
-            pointer-events: none;
-        }
-
-        @keyframes sparkleAnim {
-            0%, 100% {
-                opacity: 0;
-                transform: scale(0);
-            }
-
-            50% {
-                opacity: 1;
-                transform: scale(1);
-            }
-        }
-
-        /* Help Button Floating */
         .help-button {
             position: fixed;
             bottom: 30px;
@@ -134,7 +252,6 @@
             cursor: pointer;
             box-shadow: 0 10px 40px rgba(102, 126, 234, 0.4);
             z-index: 1000;
-            animation: pulse 2s infinite;
             transition: all 0.3s ease;
         }
 
@@ -148,7 +265,6 @@
                 font-size: 32px;
             }
 
-        /* Help Notification */
         .help-notification {
             position: fixed;
             bottom: 120px;
@@ -215,7 +331,6 @@
                 box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
             }
 
-        /* Container */
         .container {
             max-width: 1400px;
             margin: 0 auto;
@@ -224,7 +339,6 @@
             z-index: 10;
         }
 
-        /* Header */
         .header {
             text-align: center;
             margin-bottom: 80px;
@@ -305,41 +419,18 @@
             letter-spacing: 1px;
         }
 
-        /* Glass Morphism Card */
         .glass-card {
             background: rgba(255, 255, 255, 0.25);
             backdrop-filter: blur(30px) saturate(180%);
             border-radius: 40px;
             padding: 60px;
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37), inset 0 1px 0 0 rgba(255, 255, 255, 0.5), 0 0 100px rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
             border: 1px solid rgba(255, 255, 255, 0.3);
             animation: fadeInUp 1s ease-out;
             position: relative;
             overflow: hidden;
         }
 
-            .glass-card::before {
-                content: '';
-                position: absolute;
-                top: -50%;
-                left: -50%;
-                width: 200%;
-                height: 200%;
-                background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-                animation: shimmerEffect 10s infinite;
-            }
-
-        @keyframes shimmerEffect {
-            0% {
-                transform: translateX(-100%) translateY(-100%) rotate(45deg);
-            }
-
-            100% {
-                transform: translateX(100%) translateY(100%) rotate(45deg);
-            }
-        }
-
-        /* Services Section */
         .services-section {
             margin-bottom: 50px;
             position: relative;
@@ -372,27 +463,11 @@
             border: 2px solid rgba(255, 255, 255, 0.3);
             position: relative;
             overflow: hidden;
-            transform-style: preserve-3d;
         }
 
-            .service-card::before {
-                content: '';
-                position: absolute;
-                top: 0;
-                left: -100%;
-                width: 100%;
-                height: 100%;
-                background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-                transition: left 0.7s;
-            }
-
-            .service-card:hover::before {
-                left: 100%;
-            }
-
             .service-card:hover {
-                transform: translateY(-20px) rotateX(10deg) scale(1.05);
-                box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3), 0 0 30px rgba(255, 255, 255, 0.2);
+                transform: translateY(-20px) scale(1.05);
+                box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
                 border-color: rgba(255, 255, 255, 0.6);
             }
 
@@ -400,42 +475,13 @@
                 background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.85));
                 border-color: white;
                 transform: translateY(-20px) scale(1.08);
-                box-shadow: 0 35px 70px rgba(0, 0, 0, 0.4), 0 0 50px rgba(255, 255, 255, 0.5);
+                box-shadow: 0 35px 70px rgba(0, 0, 0, 0.4);
             }
 
         .service-icon {
             font-size: 48px;
             margin-bottom: 20px;
             display: block;
-            animation: bounce 2s infinite;
-        }
-
-        @keyframes bounce {
-            0%, 100% {
-                transform: translateY(0);
-            }
-
-            50% {
-                transform: translateY(-10px);
-            }
-        }
-
-        .service-card.active .service-icon {
-            animation: spin 1s ease-in-out;
-        }
-
-        @keyframes spin {
-            0% {
-                transform: rotate(0deg) scale(1);
-            }
-
-            50% {
-                transform: rotate(180deg) scale(1.2);
-            }
-
-            100% {
-                transform: rotate(360deg) scale(1);
-            }
         }
 
         .service-name {
@@ -476,7 +522,6 @@
             background-clip: text;
         }
 
-        /* Form Grid */
         .form-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -488,24 +533,7 @@
 
         .input-group {
             position: relative;
-            animation: slideInUp 0.8s ease-out backwards;
         }
-
-            .input-group:nth-child(1) {
-                animation-delay: 0.1s;
-            }
-
-            .input-group:nth-child(2) {
-                animation-delay: 0.2s;
-            }
-
-            .input-group:nth-child(3) {
-                animation-delay: 0.3s;
-            }
-
-            .input-group:nth-child(4) {
-                animation-delay: 0.4s;
-            }
 
         .input-icon {
             position: absolute;
@@ -514,11 +542,6 @@
             transform: translateY(-50%);
             font-size: 24px;
             z-index: 2;
-            transition: all 0.3s;
-        }
-
-        .input-group:hover .input-icon {
-            transform: translateY(-50%) scale(1.3) rotate(10deg);
         }
 
         input {
@@ -532,7 +555,6 @@
             font-size: 17px;
             transition: all 0.4s ease;
             outline: none;
-            transform-style: preserve-3d;
             font-weight: 500;
         }
 
@@ -543,11 +565,10 @@
             input:focus {
                 border-color: white;
                 background: rgba(255, 255, 255, 0.4);
-                transform: translateY(-5px) rotateX(5deg);
+                transform: translateY(-5px);
                 box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
             }
 
-        /* Time Slots */
         .time-section {
             margin-bottom: 50px;
             position: relative;
@@ -570,44 +591,25 @@
             font-weight: 700;
             font-size: 16px;
             cursor: pointer;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: all 0.4s;
             text-align: center;
-            transform-style: preserve-3d;
-            animation: popIn 0.5s ease-out backwards;
         }
 
-            .time-slot:nth-child(n) {
-                animation-delay: calc(0.03s * var(--i));
+            .time-slot:hover {
+                background: rgba(255, 255, 255, 0.4);
+                transform: translateY(-8px) scale(1.08);
+                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+                border-color: white;
             }
 
-        @keyframes popIn {
-            from {
-                opacity: 0;
-                transform: scale(0.3) rotateZ(15deg);
+            .time-slot.active {
+                background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.85));
+                color: #667eea;
+                border-color: white;
+                transform: translateY(-8px) scale(1.12);
+                box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
             }
 
-            to {
-                opacity: 1;
-                transform: scale(1) rotateZ(0deg);
-            }
-        }
-
-        .time-slot:hover {
-            background: rgba(255, 255, 255, 0.4);
-            transform: translateY(-8px) rotateX(10deg) scale(1.08);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-            border-color: white;
-        }
-
-        .time-slot.active {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.85));
-            color: #667eea;
-            border-color: white;
-            transform: translateY(-8px) scale(1.12);
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
-        }
-
-        /* Submit Button */
         .submit-btn {
             width: 100%;
             padding: 28px;
@@ -621,64 +623,25 @@
             cursor: pointer;
             transition: all 0.5s ease;
             box-shadow: 0 15px 50px rgba(102, 126, 234, 0.5);
-            position: relative;
-            overflow: hidden;
-            animation: gradient 3s ease infinite;
             text-transform: uppercase;
             letter-spacing: 2px;
-            z-index: 1;
         }
 
-        @keyframes gradient {
-            0% {
-                background-position: 0% 50%;
+            .submit-btn:hover {
+                transform: translateY(-10px) scale(1.03);
+                box-shadow: 0 25px 70px rgba(102, 126, 234, 0.7);
             }
 
-            50% {
-                background-position: 100% 50%;
+            .submit-btn:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+                transform: none;
             }
 
-            100% {
-                background-position: 0% 50%;
-            }
-        }
-
-        .submit-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
-            transition: left 0.7s;
-        }
-
-        .submit-btn:hover::before {
-            left: 100%;
-        }
-
-        .submit-btn:hover {
-            transform: translateY(-10px) scale(1.03);
-            box-shadow: 0 25px 70px rgba(102, 126, 234, 0.7);
-        }
-
-        .submit-btn:active {
-            transform: translateY(-5px) scale(0.98);
-        }
-
-        .submit-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        /* Success Message */
         .success-message {
             display: none;
             text-align: center;
             padding: 80px;
-            animation: bounceIn 1s ease;
         }
 
             .success-message.show {
@@ -694,7 +657,6 @@
             align-items: center;
             justify-content: center;
             margin-bottom: 40px;
-            animation: successPulse 1.5s infinite;
             position: relative;
         }
 
@@ -704,40 +666,6 @@
                 color: white;
                 font-weight: bold;
             }
-
-            .success-icon::after {
-                content: '';
-                position: absolute;
-                width: 100%;
-                height: 100%;
-                border-radius: 50%;
-                border: 3px solid #38ef7d;
-                animation: ripple 1.5s infinite;
-            }
-
-        @keyframes ripple {
-            0% {
-                transform: scale(1);
-                opacity: 1;
-            }
-
-            100% {
-                transform: scale(1.5);
-                opacity: 0;
-            }
-        }
-
-        @keyframes successPulse {
-            0%, 100% {
-                transform: scale(1);
-                box-shadow: 0 0 0 0 rgba(56, 239, 125, 0.7);
-            }
-
-            50% {
-                transform: scale(1.08);
-                box-shadow: 0 0 0 30px rgba(56, 239, 125, 0);
-            }
-        }
 
         .success-title {
             font-size: 42px;
@@ -752,7 +680,6 @@
             color: rgba(255, 255, 255, 0.95);
         }
 
-        /* Info Footer */
         .info-footer {
             text-align: center;
             margin-top: 50px;
@@ -764,18 +691,8 @@
 
             .info-footer p {
                 margin: 12px 0;
-                animation: fadeIn 1.2s ease-out backwards;
             }
 
-                .info-footer p:nth-child(1) {
-                    animation-delay: 0.6s;
-                }
-
-                .info-footer p:nth-child(2) {
-                    animation-delay: 0.8s;
-                }
-
-        /* Animations */
         @keyframes fadeInDown {
             from {
                 opacity: 0;
@@ -800,49 +717,6 @@
             }
         }
 
-        @keyframes slideInUp {
-            from {
-                opacity: 0;
-                transform: translateY(40px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-
-            to {
-                opacity: 1;
-            }
-        }
-
-        @keyframes bounceIn {
-            0% {
-                opacity: 0;
-                transform: scale(0.3);
-            }
-
-            50% {
-                transform: scale(1.1);
-            }
-
-            70% {
-                transform: scale(0.9);
-            }
-
-            100% {
-                opacity: 1;
-                transform: scale(1);
-            }
-        }
-
-        /* Responsive */
         @media (max-width: 768px) {
             h1 {
                 font-size: 42px;
@@ -850,6 +724,10 @@
 
             .logo-img {
                 width: 180px;
+            }
+
+            .loading-logo {
+                width: 150px;
             }
 
             .glass-card {
@@ -880,22 +758,24 @@
     </style>
 </head>
 <body>
+    <!-- ===== PANTALLA DE CARGA ===== -->
+    <div id="loadingScreen">
+        <div class="loading-content">
+            <img src="https://i.postimg.cc/JhmhZ1bh/Eva-Vidal.png" alt="Eva Vidal" class="loading-logo">
+            <div class="loading-spinner">
+                <div class="spinner-ring"></div>
+                <div class="spinner-ring"></div>
+                <div class="spinner-ring"></div>
+            </div>
+            <h2 class="loading-text">Preparando tu experiencia</h2>
+            <p class="loading-subtext">Conectando con el servidor<span class="loading-dots"></span></p>
+        </div>
+    </div>
+
     <!-- Floating Orbs -->
     <div class="orb orb1"></div>
     <div class="orb orb2"></div>
     <div class="orb orb3"></div>
-
-    <!-- Sparkles -->
-    <script>
-        for (let i = 0; i < 20; i++) {
-            const sparkle = document.createElement('div');
-            sparkle.className = 'sparkle';
-            sparkle.style.left = Math.random() * 100 + '%';
-            sparkle.style.top = Math.random() * 100 + '%';
-            sparkle.style.animationDelay = Math.random() * 3 + 's';
-            document.body.appendChild(sparkle);
-        }
-    </script>
 
     <!-- Help Button -->
     <div class="help-button" id="helpBtn"></div>
@@ -999,6 +879,62 @@
     </div>
 
     <script>
+        // ===== CONTROL DE PANTALLA DE CARGA =====
+        let serverReady = false;
+
+        // Función para verificar si el servidor está activo
+        async function checkServerHealth() {
+            try {
+                const response = await fetch('/health', {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                if (response.ok) {
+                    serverReady = true;
+                    hideLoadingScreen();
+                    return true;
+                }
+            } catch (error) {
+                console.log('Servidor aún no disponible, reintentando...');
+            }
+            return false;
+        }
+
+        // Ocultar pantalla de carga
+        function hideLoadingScreen() {
+            const loadingScreen = document.getElementById('loadingScreen');
+            loadingScreen.classList.add('hidden');
+        }
+
+        // Intentar verificar el servidor al cargar
+        async function initializeApp() {
+            const isReady = await checkServerHealth();
+
+            if (!isReady) {
+                // Si no está listo, reintentar cada 2 segundos
+                const interval = setInterval(async () => {
+                    const ready = await checkServerHealth();
+                    if (ready) {
+                        clearInterval(interval);
+                    }
+                }, 2000);
+
+                // Timeout máximo de 30 segundos
+                setTimeout(() => {
+                    clearInterval(interval);
+                    if (!serverReady) {
+                        hideLoadingScreen();
+                        alert('El servidor está tardando más de lo esperado. Por favor, recarga la página o contacta con soporte.');
+                    }
+                }, 30000);
+            }
+        }
+
+        // Iniciar verificación
+        initializeApp();
+
+        // ===== CÓDIGO PRINCIPAL DEL FORMULARIO =====
         const formState = {
             service: '',
             time: '',
@@ -1084,7 +1020,6 @@
             btn.disabled = true;
 
             try {
-                // Endpoint correcto para reservas
                 const response = await fetch('/reservar', {
                     method: 'POST',
                     headers: {
@@ -1133,7 +1068,7 @@
 
         // Show help notification after 5 seconds
         setTimeout(() => {
-            if (!helpShown) {
+            if (!helpShown && serverReady) {
                 helpNotification.classList.add('show');
                 helpShown = true;
 
@@ -1156,7 +1091,7 @@
 
         // Show help notification periodically (every 30 seconds)
         setInterval(() => {
-            if (!helpNotification.classList.contains('show')) {
+            if (!helpNotification.classList.contains('show') && serverReady) {
                 helpNotification.classList.add('show');
                 setTimeout(() => {
                     helpNotification.classList.remove('show');
@@ -1166,17 +1101,6 @@
 
         // Initialize
         generateTimeSlots();
-
-        // Add mouse move parallax effect
-        document.addEventListener('mousemove', (e) => {
-            const moveX = (e.clientX - window.innerWidth / 2) * 0.01;
-            const moveY = (e.clientY - window.innerHeight / 2) * 0.01;
-
-            document.querySelectorAll('.orb').forEach((orb, index) => {
-                const speed = (index + 1) * 0.5;
-                orb.style.transform = `translate(${moveX * speed}px, ${moveY * speed}px)`;
-            });
-        });
     </script>
 </body>
 </html>
