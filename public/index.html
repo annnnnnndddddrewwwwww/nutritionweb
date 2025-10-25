@@ -943,6 +943,12 @@
         // ===== CONTROL DE PANTALLA DE CARGA =====
         let serverReady = false;
 
+        function hideLoadingScreen() {
+            const loadingScreen = document.getElementById('loadingScreen');
+            loadingScreen.classList.add('hidden');
+            console.log('✅ Pantalla de carga ocultada');
+        }
+
         async function checkServerHealth() {
             try {
                 const response = await fetch('/health', {
@@ -952,11 +958,12 @@
 
                 if (response.ok) {
                     serverReady = true;
+                    console.log('✅ Servidor conectado correctamente');
                     hideLoadingScreen();
                     return true;
                 }
             } catch (error) {
-                console.log('Servidor aún no disponible, reintentando...');
+                console.log('⏳ Servidor aún no disponible, reintentando...');
             }
             return false;
         }
@@ -967,27 +974,44 @@
         }
 
         async function initializeApp() {
+            console.log('🚀 Iniciando aplicación...');
+
+            // Intentar conectar inmediatamente
             const isReady = await checkServerHealth();
 
             if (!isReady) {
+                console.log('⏳ Primera conexión falló, reintentando cada 1.5 segundos...');
+
+                let attempts = 0;
+                const maxAttempts = 20; // 30 segundos máximo
+
                 const interval = setInterval(async () => {
+                    attempts++;
+                    console.log(`🔄 Intento ${attempts}/${maxAttempts}...`);
+
                     const ready = await checkServerHealth();
                     if (ready) {
                         clearInterval(interval);
+                        console.log('✅ Conexión establecida!');
                     }
-                }, 2000);
 
-                setTimeout(() => {
-                    clearInterval(interval);
-                    if (!serverReady) {
+                    // Si alcanzamos el máximo de intentos, ocultar pantalla de carga de todos modos
+                    if (attempts >= maxAttempts) {
+                        clearInterval(interval);
+                        console.log('⚠️ Máximo de intentos alcanzado');
                         hideLoadingScreen();
-                        alert('El servidor está tardando más de lo esperado. Por favor, recarga la página o contacta con soporte.');
+                        alert('El servidor está tardando más de lo esperado. La página se cargará, pero puede que algunas funciones no estén disponibles.');
                     }
-                }, 30000);
+                }, 1500);
             }
         }
 
-        initializeApp();
+        // Iniciar la aplicación cuando el DOM esté listo
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeApp);
+        } else {
+            initializeApp();
+        }
 
         // ===== CÓDIGO PRINCIPAL DEL FORMULARIO =====
         const formState = {
