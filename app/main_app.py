@@ -1,23 +1,201 @@
 """
 Sistema de Gestión de Citas - PyQt6
-Aplicación moderna para administrar reservas con integración a Google Calendar y Sheets
+Aplicación moderna para administrar reservas con integración REAL a Google Calendar y Sheets
 """
 
 import sys
+import os
 import json
-import requests
 from datetime import datetime, timedelta
+from google.oauth2.credentials import Credentials
+from google.auth.transport.requests import Request
+from googleapiclient.discovery import build
+from dotenv import load_dotenv
+
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QPushButton, QTableWidget, QTableWidgetItem, QHeaderView,
     QFrame, QScrollArea, QMessageBox, QDialog, QLineEdit, QTextEdit,
-    QComboBox, QDateEdit, QTimeEdit, QGridLayout, QStackedWidget
+    QComboBox, QDateEdit, QTimeEdit, QGridLayout, QProgressBar
 )
 from PyQt6.QtCore import Qt, QTimer, QDate, QTime, pyqtSignal, QThread
-from PyQt6.QtGui import QFont, QColor, QPalette, QIcon
+from PyQt6.QtGui import QFont, QColor
 
-# ===== CONFIGURACIÓN =====
-SERVER_URL = "https://nutritionweb.onrender.com"  # Cambia esto por tu URL de Render
+# Cargar variables de entorno
+load_dotenv()
+
+# ===== CONFIGURACIÓN GOOGLE =====
+SHEET_ID = os.getenv('SHEET_ID')
+CALENDAR_ID = os.getenv('CALENDAR_ID')
+CALENDAR_OWNER_EMAIL = os.getenv('CALENDAR_OWNER_EMAIL')
+
+# Credenciales OAuth
+OAUTH_CLIENT_ID = os.getenv('OAUTH_CLIENT_ID')
+OAUTH_CLIENT_SECRET = os.getenv('OAUTH_CLIENT_SECRET')
+OAUTH_REFRESH_TOKEN = os.getenv('OAUTH_REFRESH_TOKEN')
+
+# ===== CLIENTE GOOGLE =====
+class GoogleAPIClient:
+    """Cliente para interactuar con Google Sheets y Calendar"""
+    
+    def __init__(self):
+        self.creds = None
+        self.sheets_service = None
+        self.calendar_service = None
+        self._authenticate()
+    
+    def _authenticate(self):
+        """Autenticar con Google usando OAuth2"""
+        try:
+            # Crear credenciales desde el refresh token
+            self.creds = Credentials(
+                None,
+                refresh_token=OAUTH_REFRESH_TOKEN,
+                token_uri='https://oauth2.googleapis.com/token',
+                client_id=OAUTH_CLIENT_ID,
+                client_secret=OAUTH_CLIENT_SECRET
+            )
+            
+            # Refrescar el token si es necesario
+            if self.creds.expired or not self.creds.valid:
+                self.creds.refresh(Request())
+            
+            # Crear servicios
+            self.sheets_service = build('sheets', 'v4', credentials=self.creds)
+            self.calendar_service = build('calendar', 'v3', credentials=self.creds)
+            
+            print('✅ Autenticación exitosa con Google')
+            
+        except Exception as e:
+            print(f'❌ Error en autenticación: {e}')
+            raise
+    
+    def get_citas_from_sheets(self):
+        """Obtener todas las citas desde Google Sheets"""
+        try:
+            result = self.sheets_service.spreadsheets().values().get(
+                spreadsheetId=SHEET_ID,
+                range='Reservas!A2:H'
+            ).execute()
+            
+            values = result.get('values', [])
+            return values
+            
+        except Exception as e:
+            print(f'❌ Error obteniendo citas de Sheets: {e}')
+            return []
+    
+    def get_eventos_calendar(self):
+        """Obtener eventos futuros del calendario"""
+        try:
+            now = datetime.utcnow().isoformat() + 'Z'
+            
+            events_result = self.calendar_service.events().list(
+                calendarId=CALENDAR_ID,
+                timeMin=now,
+                maxResults=100,
+                singleEvents=True,
+                orderBy='startTime'
+            ).execute()
+            
+            events = events_result.get('items', [])
+            return events
+            
+        except Exception as e:
+            print(f'❌ Error obteniendo eventos de Calendar: {e}')
+            return []
+    
+    def crear_cita(self, data):
+        """Crear una nueva cita en Calendar y Sheets"""
+        try:
+            # 1. Preparar fechas
+            fecha_str = data['date']
+            fecha_obj = datetime.strptime(fecha_str, '%Y-%m-%d %H:%M')
+            
+            start_time = fecha_obj.isoformat()
+            end_time = (fecha_obj + timedelta(hours=1)).isoformat()
+            
+            # 2. Crear evento en Calendar
+            event = {
+                'summary': f"Cita: {data['nombre']} {data['apellido']} ({data['type']})",
+                'description': f"Tipo: {data['type']}\nEmail: {data['email']}\nTeléfono: {data['telefono']}",
+                'start': {
+                    'dateTime': start_time,
+                    'timeZone': 'Europe/Madrid',
+                },
+                'end': {
+                    'dateTime': end_time,
+                    'timeZone': 'Europe/Madrid',
+                },
+                'attendees': [
+                    {'email': data['email']},
+                    {'email': CALENDAR_OWNER_EMAIL}
+                ],
+                'reminders': {
+                    'useDefault': False,
+                    'overrides': [
+                        {'method': 'email', 'minutes': 24 * 60},
+                        {'method': 'popup', 'minutes': 10},
+                    ],
+                },
+            }
+            
+            calendar_event = self.calendar_service.events().insert(
+                calendarId=CALENDAR_ID,
+                body=event,
+                sendNotifications=True
+            ).execute()
+            
+            print(f'✅ Evento creado en Calendar: {calendar_event["id"]}')
+            
+            # 3. Guardar en Sheets
+            fecha_formateada = fecha_obj.strftime('%d/%m/%Y %H:%M')
+            
+            row = [
+                datetime.now().isoformat(),
+                data['nombre'],
+                data['apellido'],
+                data['email'],
+                data['telefono'],
+                data['type'],
+                fecha_formateada,
+                calendar_event.get('htmlLink', '')
+            ]
+            
+            self.sheets_service.spreadsheets().values().append(
+                spreadsheetId=SHEET_ID,
+                range='Reservas!A:H',
+                valueInputOption='USER_ENTERED',
+                body={'values': [row]}
+            ).execute()
+            
+            print('✅ Datos guardados en Sheets')
+            
+            return {
+                'success': True,
+                'event_id': calendar_event['id'],
+                'link': calendar_event.get('htmlLink', '')
+            }
+            
+        except Exception as e:
+            print(f'❌ Error creando cita: {e}')
+            return {'success': False, 'error': str(e)}
+    
+    def cancelar_cita(self, event_id):
+        """Cancelar una cita en Google Calendar"""
+        try:
+            self.calendar_service.events().delete(
+                calendarId=CALENDAR_ID,
+                eventId=event_id,
+                sendNotifications=True
+            ).execute()
+            
+            print(f'✅ Evento {event_id} cancelado en Calendar')
+            return True
+            
+        except Exception as e:
+            print(f'❌ Error cancelando cita: {e}')
+            return False
 
 # ===== ESTILOS QSS =====
 QSS_STYLE = """
@@ -78,6 +256,14 @@ QLabel#statNumber {
 QLabel#statLabel {
     color: #64748b;
     font-size: 14px;
+    font-weight: 600;
+}
+
+QLabel#statusLabel {
+    color: white;
+    font-size: 13px;
+    padding: 8px 15px;
+    border-radius: 8px;
     font-weight: 600;
 }
 
@@ -211,40 +397,114 @@ QDialog {
     border-radius: 15px;
 }
 
-/* ===== TOOLTIPS ===== */
-QToolTip {
-    background: #1e3a8a;
-    color: white;
-    border: none;
+/* ===== PROGRESS BAR ===== */
+QProgressBar {
+    border: 2px solid #3b82f6;
     border-radius: 8px;
-    padding: 8px;
-    font-size: 13px;
+    text-align: center;
+    background: #f1f5f9;
+}
+
+QProgressBar::chunk {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                stop:0 #1e3a8a, stop:1 #3b82f6);
+    border-radius: 6px;
 }
 """
 
 # ===== WORKER PARA CARGAR DATOS =====
 class DataLoader(QThread):
-    finished = pyqtSignal(list)
+    finished = pyqtSignal(dict)
     error = pyqtSignal(str)
     
-    def __init__(self, url):
+    def __init__(self, google_client):
         super().__init__()
-        self.url = url
+        self.google_client = google_client
     
     def run(self):
         try:
-            response = requests.get(f"{self.url}/citas", timeout=10)
-            if response.ok:
-                self.finished.emit(response.json())
-            else:
-                self.error.emit("Error al cargar datos del servidor")
+            # Obtener datos de Sheets
+            rows = self.google_client.get_citas_from_sheets()
+            
+            # Obtener eventos de Calendar
+            events = self.google_client.get_eventos_calendar()
+            
+            # Procesar datos
+            citas = []
+            now = datetime.now()
+            
+            # Crear un mapa de eventos por nombre para relacionar
+            event_map = {}
+            for event in events:
+                summary = event.get('summary', '')
+                event_map[summary] = event
+            
+            for row in rows:
+                if len(row) >= 7:
+                    timestamp, nombre, apellido, email, telefono, tipo, fecha_hora = row[:7]
+                    calendar_link = row[7] if len(row) > 7 else ''
+                    
+                    # Parsear fecha
+                    try:
+                        # Intentar varios formatos
+                        for fmt in ['%d/%m/%Y %H:%M', '%Y-%m-%d %H:%M:%S', '%d/%m/%Y, %H:%M:%S']:
+                            try:
+                                fecha_obj = datetime.strptime(fecha_hora, fmt)
+                                break
+                            except:
+                                continue
+                        else:
+                            fecha_obj = datetime.now()
+                        
+                        # Solo citas futuras
+                        if fecha_obj > now:
+                            # Buscar evento en Calendar
+                            event_key = f"Cita: {nombre} {apellido} ({tipo})"
+                            calendar_event = event_map.get(event_key)
+                            event_id = calendar_event.get('id') if calendar_event else None
+                            
+                            citas.append({
+                                'fecha': fecha_obj.strftime('%d/%m/%Y'),
+                                'hora': fecha_obj.strftime('%H:%M'),
+                                'cliente': f"{nombre} {apellido}",
+                                'nombre': nombre,
+                                'apellido': apellido,
+                                'email': email,
+                                'telefono': telefono,
+                                'tipo': tipo.capitalize(),
+                                'fecha_obj': fecha_obj,
+                                'event_id': event_id,
+                                'calendar_link': calendar_link
+                            })
+                    except Exception as e:
+                        print(f"Error procesando fila: {e}")
+                        continue
+            
+            # Ordenar por fecha
+            citas.sort(key=lambda x: x['fecha_obj'])
+            
+            # Calcular estadísticas
+            hoy = now.replace(hour=0, minute=0, second=0, microsecond=0)
+            inicio_semana = hoy - timedelta(days=hoy.weekday())
+            inicio_mes = hoy.replace(day=1)
+            
+            stats = {
+                'hoy': len([c for c in citas if c['fecha_obj'].date() == hoy.date()]),
+                'semana': len([c for c in citas if c['fecha_obj'] >= inicio_semana]),
+                'mes': len([c for c in citas if c['fecha_obj'] >= inicio_mes]),
+                'total': len(rows)
+            }
+            
+            self.finished.emit({'citas': citas, 'stats': stats})
+            
         except Exception as e:
-            self.error.emit(f"Error de conexión: {str(e)}")
+            self.error.emit(str(e))
 
 # ===== DIÁLOGO NUEVA CITA =====
 class NuevaCitaDialog(QDialog):
-    def __init__(self, parent=None):
+    def __init__(self, google_client, parent=None):
         super().__init__(parent)
+        self.google_client = google_client
         self.setWindowTitle("Nueva Cita")
         self.setMinimumWidth(500)
         self.setup_ui()
@@ -307,6 +567,11 @@ class NuevaCitaDialog(QDialog):
         
         layout.addLayout(grid)
         
+        # Progress bar (oculta por defecto)
+        self.progress = QProgressBar()
+        self.progress.setVisible(False)
+        layout.addWidget(self.progress)
+        
         # Botones
         button_layout = QHBoxLayout()
         button_layout.addStretch()
@@ -318,26 +583,57 @@ class NuevaCitaDialog(QDialog):
         
         self.save_btn = QPushButton("Guardar Cita")
         self.save_btn.setObjectName("successButton")
-        self.save_btn.clicked.connect(self.accept)
+        self.save_btn.clicked.connect(self.guardar_cita)
         button_layout.addWidget(self.save_btn)
         
         layout.addLayout(button_layout)
     
-    def get_data(self):
-        tipo_map = {
-            0: "consulta",
-            1: "seguimiento",
-            2: "plan"
-        }
+    def guardar_cita(self):
+        # Validar
+        if not self.nombre_input.text() or not self.email_input.text() or not self.telefono_input.text():
+            QMessageBox.warning(self, "Error", "Por favor completa todos los campos")
+            return
         
-        return {
-            "nombre": self.nombre_input.text().split()[0] if self.nombre_input.text() else "",
-            "apellido": " ".join(self.nombre_input.text().split()[1:]) if len(self.nombre_input.text().split()) > 1 else "",
+        # Mostrar progreso
+        self.progress.setVisible(True)
+        self.progress.setRange(0, 0)  # Modo indeterminado
+        self.save_btn.setEnabled(False)
+        
+        # Preparar datos
+        tipo_map = {0: "consulta", 1: "seguimiento", 2: "plan"}
+        
+        nombre_completo = self.nombre_input.text().split()
+        nombre = nombre_completo[0]
+        apellido = " ".join(nombre_completo[1:]) if len(nombre_completo) > 1 else ""
+        
+        data = {
+            "nombre": nombre,
+            "apellido": apellido,
             "email": self.email_input.text(),
             "telefono": self.telefono_input.text(),
             "type": tipo_map[self.tipo_combo.currentIndex()],
             "date": f"{self.fecha_input.date().toString('yyyy-MM-dd')} {self.hora_input.time().toString('HH:mm')}"
         }
+        
+        # Crear cita
+        result = self.google_client.crear_cita(data)
+        
+        self.progress.setVisible(False)
+        self.save_btn.setEnabled(True)
+        
+        if result['success']:
+            QMessageBox.information(
+                self,
+                "Éxito",
+                "✅ Cita creada correctamente\n\nSe ha enviado confirmación al cliente"
+            )
+            self.accept()
+        else:
+            QMessageBox.critical(
+                self,
+                "Error",
+                f"Error al crear la cita:\n{result.get('error', 'Error desconocido')}"
+            )
 
 # ===== VENTANA PRINCIPAL =====
 class MainWindow(QMainWindow):
@@ -346,16 +642,31 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Sistema de Gestión de Citas - Eva Vidal")
         self.setMinimumSize(1400, 900)
         
+        # Inicializar cliente Google
+        try:
+            self.google_client = GoogleAPIClient()
+            self.status_msg = "✅ Conectado a Google"
+        except Exception as e:
+            self.google_client = None
+            self.status_msg = f"❌ Error: {str(e)}"
+            QMessageBox.critical(
+                self,
+                "Error de Conexión",
+                f"No se pudo conectar con Google:\n{str(e)}\n\nVerifica tus credenciales en .env"
+            )
+        
         # Aplicar estilos
         self.setStyleSheet(QSS_STYLE)
         
         self.setup_ui()
-        self.load_data()
         
-        # Auto-refresh cada 30 segundos
-        self.timer = QTimer()
-        self.timer.timeout.connect(self.load_data)
-        self.timer.start(30000)
+        if self.google_client:
+            self.load_data()
+            
+            # Auto-refresh cada 60 segundos
+            self.timer = QTimer()
+            self.timer.timeout.connect(self.load_data)
+            self.timer.start(60000)
     
     def setup_ui(self):
         # Widget central
@@ -369,9 +680,12 @@ class MainWindow(QMainWindow):
         # ===== HEADER =====
         header = QFrame()
         header.setObjectName("headerFrame")
-        header.setFixedHeight(120)
+        header.setFixedHeight(140)
         
-        header_layout = QHBoxLayout(header)
+        header_layout = QVBoxLayout(header)
+        
+        # Fila superior
+        top_row = QHBoxLayout()
         
         # Logo y título
         title_layout = QVBoxLayout()
@@ -382,22 +696,29 @@ class MainWindow(QMainWindow):
         
         title_layout.addWidget(title)
         title_layout.addWidget(subtitle)
-        header_layout.addLayout(title_layout)
+        top_row.addLayout(title_layout)
         
-        header_layout.addStretch()
+        top_row.addStretch()
         
-        # Botón nueva cita
+        # Botones
         nueva_cita_btn = QPushButton("➕ Nueva Cita")
         nueva_cita_btn.setFixedSize(200, 50)
         nueva_cita_btn.clicked.connect(self.nueva_cita)
-        header_layout.addWidget(nueva_cita_btn)
+        top_row.addWidget(nueva_cita_btn)
         
-        # Botón refrescar
         refresh_btn = QPushButton("🔄")
         refresh_btn.setFixedSize(50, 50)
         refresh_btn.setToolTip("Actualizar datos")
         refresh_btn.clicked.connect(self.load_data)
-        header_layout.addWidget(refresh_btn)
+        top_row.addWidget(refresh_btn)
+        
+        header_layout.addLayout(top_row)
+        
+        # Status bar
+        self.status_label = QLabel(self.status_msg)
+        self.status_label.setObjectName("statusLabel")
+        self.status_label.setStyleSheet("background: #10b981;" if "✅" in self.status_msg else "background: #dc2626;")
+        header_layout.addWidget(self.status_label, alignment=Qt.AlignmentFlag.AlignRight)
         
         main_layout.addWidget(header)
         
@@ -478,35 +799,51 @@ class MainWindow(QMainWindow):
         return card
     
     def load_data(self):
-        # Aquí deberías hacer la petición real a tu servidor
-        # Por ahora, usamos datos de ejemplo
-        self.update_stats(5, 12, 45, 234)
-        self.populate_table([
-            {
-                "fecha": "2024-10-27",
-                "hora": "10:00",
-                "cliente": "Ana García",
-                "email": "ana@email.com",
-                "telefono": "644123456",
-                "tipo": "Consulta"
-            },
-            {
-                "fecha": "2024-10-27",
-                "hora": "11:30",
-                "cliente": "Carlos Ruiz",
-                "email": "carlos@email.com",
-                "telefono": "655987654",
-                "tipo": "Seguimiento"
-            }
-        ])
+        """Cargar datos desde Google"""
+        if not self.google_client:
+            return
+        
+        self.status_label.setText("🔄 Actualizando datos...")
+        self.status_label.setStyleSheet("background: #f59e0b;")
+        
+        # Crear worker thread
+        self.loader = DataLoader(self.google_client)
+        self.loader.finished.connect(self.on_data_loaded)
+        self.loader.error.connect(self.on_data_error)
+        self.loader.start()
     
-    def update_stats(self, hoy, semana, mes, total):
-        self.stat_hoy.number_label.setText(str(hoy))
-        self.stat_semana.number_label.setText(str(semana))
-        self.stat_mes.number_label.setText(str(mes))
-        self.stat_total.number_label.setText(str(total))
+    def on_data_loaded(self, data):
+        """Callback cuando los datos se cargan exitosamente"""
+        citas = data['citas']
+        stats = data['stats']
+        
+        # Actualizar estadísticas
+        self.stat_hoy.number_label.setText(str(stats['hoy']))
+        self.stat_semana.number_label.setText(str(stats['semana']))
+        self.stat_mes.number_label.setText(str(stats['mes']))
+        self.stat_total.number_label.setText(str(stats['total']))
+        
+        # Actualizar tabla
+        self.populate_table(citas)
+        
+        # Actualizar status
+        now = datetime.now().strftime('%H:%M:%S')
+        self.status_label.setText(f"✅ Actualizado: {now}")
+        self.status_label.setStyleSheet("background: #10b981;")
+    
+    def on_data_error(self, error_msg):
+        """Callback cuando hay error al cargar datos"""
+        self.status_label.setText(f"❌ Error: {error_msg}")
+        self.status_label.setStyleSheet("background: #dc2626;")
+        
+        QMessageBox.warning(
+            self,
+            "Error al Cargar Datos",
+            f"No se pudieron cargar los datos:\n{error_msg}"
+        )
     
     def populate_table(self, citas):
+        """Poblar la tabla con las citas"""
         self.table.setRowCount(len(citas))
         
         for row, cita in enumerate(citas):
@@ -526,7 +863,7 @@ class MainWindow(QMainWindow):
             delete_btn.setFixedSize(40, 40)
             delete_btn.setObjectName("dangerButton")
             delete_btn.setToolTip("Cancelar cita")
-            delete_btn.clicked.connect(lambda checked, r=row: self.delete_cita(r))
+            delete_btn.clicked.connect(lambda checked, event_id=cita.get('event_id'), r=row: self.delete_cita(event_id, r))
             
             actions_layout.addWidget(delete_btn)
             actions_layout.addStretch()
@@ -534,58 +871,71 @@ class MainWindow(QMainWindow):
             self.table.setCellWidget(row, 6, actions)
     
     def nueva_cita(self):
-        dialog = NuevaCitaDialog(self)
+        """Abrir diálogo para crear nueva cita"""
+        if not self.google_client:
+            QMessageBox.warning(
+                self,
+                "Error",
+                "No hay conexión con Google. Verifica tus credenciales."
+            )
+            return
+        
+        dialog = NuevaCitaDialog(self.google_client, self)
         if dialog.exec() == QDialog.DialogCode.Accepted:
-            data = dialog.get_data()
-            
-            # Validar datos
-            if not all([data["nombre"], data["email"], data["telefono"]]):
-                QMessageBox.warning(self, "Error", "Por favor completa todos los campos")
-                return
-            
-            # Aquí harías la petición POST a tu servidor
-            try:
-                response = requests.post(
-                    f"{SERVER_URL}/reservar",
-                    json=data,
-                    timeout=10
-                )
-                
-                if response.ok:
-                    QMessageBox.information(
-                        self,
-                        "Éxito",
-                        "✅ Cita creada correctamente\n\nSe ha enviado confirmación por email"
-                    )
-                    self.load_data()
-                else:
-                    QMessageBox.critical(
-                        self,
-                        "Error",
-                        f"Error al crear la cita:\n{response.text}"
-                    )
-            except Exception as e:
-                QMessageBox.critical(
-                    self,
-                    "Error de Conexión",
-                    f"No se pudo conectar con el servidor:\n{str(e)}"
-                )
+            # Recargar datos
+            self.load_data()
     
-    def delete_cita(self, row):
+    def delete_cita(self, event_id, row):
+        """Cancelar una cita"""
+        if not event_id:
+            QMessageBox.warning(
+                self,
+                "Error",
+                "No se encontró el evento en Google Calendar"
+            )
+            return
+        
         reply = QMessageBox.question(
             self,
             "Confirmar",
-            "¿Estás seguro de cancelar esta cita?",
+            "¿Estás seguro de cancelar esta cita?\n\nSe notificará al cliente por email.",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
         )
         
         if reply == QMessageBox.StandardButton.Yes:
-            # Aquí harías la petición DELETE a tu servidor
-            self.table.removeRow(row)
-            QMessageBox.information(self, "Éxito", "Cita cancelada correctamente")
+            # Cancelar en Google Calendar
+            success = self.google_client.cancelar_cita(event_id)
+            
+            if success:
+                self.table.removeRow(row)
+                QMessageBox.information(
+                    self,
+                    "Éxito",
+                    "✅ Cita cancelada correctamente\n\nSe ha notificado al cliente"
+                )
+                # Recargar para actualizar stats
+                self.load_data()
+            else:
+                QMessageBox.critical(
+                    self,
+                    "Error",
+                    "No se pudo cancelar la cita en Google Calendar"
+                )
 
 # ===== MAIN =====
 def main():
+    # Verificar que existe el archivo .env
+    if not os.path.exists('.env'):
+        print("❌ ERROR: No se encontró el archivo .env")
+        print("\nCrea un archivo .env con:")
+        print("SHEET_ID=tu_sheet_id")
+        print("CALENDAR_ID=tu_calendar_id")
+        print("CALENDAR_OWNER_EMAIL=tu_email")
+        print("OAUTH_CLIENT_ID=tu_client_id")
+        print("OAUTH_CLIENT_SECRET=tu_client_secret")
+        print("OAUTH_REFRESH_TOKEN=tu_refresh_token")
+        sys.exit(1)
+    
     app = QApplication(sys.argv)
     
     # Configurar fuente global
