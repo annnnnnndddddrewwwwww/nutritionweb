@@ -940,9 +940,13 @@
     </div>
 
     <script>
-        // ===== CONTROL DE PANTALLA DE CARGA =====
+        // ===== CONFIGURACIÓN DEL SERVIDOR =====
+        // IMPORTANTE: La página se sirve desde el mismo servidor, así que usamos rutas relativas
+        const API_BASE = ''; // Ruta vacía = mismo servidor
+
         let serverReady = false;
 
+        // ===== CONTROL DE PANTALLA DE CARGA =====
         function hideLoadingScreen() {
             const loadingScreen = document.getElementById('loadingScreen');
             loadingScreen.classList.add('hidden');
@@ -951,7 +955,7 @@
 
         async function checkServerHealth() {
             try {
-                const response = await fetch('/health', {
+                const response = await fetch(`${API_BASE}/health`, {
                     method: 'GET',
                     headers: { 'Content-Type': 'application/json' }
                 });
@@ -959,54 +963,55 @@
                 if (response.ok) {
                     serverReady = true;
                     console.log('✅ Servidor conectado correctamente');
-                    hideLoadingScreen();
                     return true;
                 }
             } catch (error) {
-                console.log('⏳ Servidor aún no disponible, reintentando...');
+                console.log('⏳ Esperando servidor...', error.message);
             }
             return false;
         }
 
-        function hideLoadingScreen() {
-            const loadingScreen = document.getElementById('loadingScreen');
-            loadingScreen.classList.add('hidden');
-        }
-
         async function initializeApp() {
             console.log('🚀 Iniciando aplicación...');
+            console.log('🌐 API Base:', window.location.origin);
 
-            // Intentar conectar inmediatamente
-            const isReady = await checkServerHealth();
+            // Intentar conectar con timeout de 10 segundos
+            const timeout = new Promise(resolve => setTimeout(() => resolve(false), 10000));
+            const healthCheck = checkServerHealth();
 
-            if (!isReady) {
-                console.log('⏳ Primera conexión falló, reintentando cada 1.5 segundos...');
+            const isReady = await Promise.race([healthCheck, timeout]);
 
-                let attempts = 0;
-                const maxAttempts = 20; // 30 segundos máximo
-
-                const interval = setInterval(async () => {
-                    attempts++;
-                    console.log(`🔄 Intento ${attempts}/${maxAttempts}...`);
-
-                    const ready = await checkServerHealth();
-                    if (ready) {
-                        clearInterval(interval);
-                        console.log('✅ Conexión establecida!');
-                    }
-
-                    // Si alcanzamos el máximo de intentos, ocultar pantalla de carga de todos modos
-                    if (attempts >= maxAttempts) {
-                        clearInterval(interval);
-                        console.log('⚠️ Máximo de intentos alcanzado');
-                        hideLoadingScreen();
-                        alert('El servidor está tardando más de lo esperado. La página se cargará, pero puede que algunas funciones no estén disponibles.');
-                    }
-                }, 1500);
+            if (isReady) {
+                hideLoadingScreen();
+                return;
             }
+
+            // Si no está listo, seguir intentando pero ocultar pantalla de carga
+            console.log('⚠️ Servidor no respondió rápidamente, ocultando pantalla de carga...');
+            hideLoadingScreen();
+
+            // Seguir intentando en segundo plano
+            let attempts = 0;
+            const maxAttempts = 10;
+
+            const interval = setInterval(async () => {
+                attempts++;
+                console.log(`🔄 Reintento ${attempts}/${maxAttempts}...`);
+
+                const ready = await checkServerHealth();
+                if (ready) {
+                    clearInterval(interval);
+                    console.log('✅ Conexión establecida!');
+                }
+
+                if (attempts >= maxAttempts) {
+                    clearInterval(interval);
+                    console.log('⚠️ Máximo de intentos alcanzado');
+                }
+            }, 2000);
         }
 
-        // Iniciar la aplicación cuando el DOM esté listo
+        // Iniciar cuando el DOM esté listo
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', initializeApp);
         } else {
@@ -1099,7 +1104,7 @@
             btn.disabled = true;
 
             try {
-                const response = await fetch('/reservar', {
+                const response = await fetch(`${API_BASE}/reservar`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1122,7 +1127,8 @@
                         location.reload();
                     }, 3500);
                 } else {
-                    alert('Error al procesar la reserva. Por favor, inténtalo de nuevo.');
+                    const errorData = await response.json();
+                    alert(errorData.message || 'Error al procesar la reserva. Por favor, inténtalo de nuevo.');
                     btn.textContent = 'Confirmar Reserva';
                     btn.disabled = false;
                 }
@@ -1146,7 +1152,7 @@
         let helpShown = false;
 
         setTimeout(() => {
-            if (!helpShown && serverReady) {
+            if (!helpShown) {
                 helpNotification.classList.add('show');
                 helpShown = true;
 
@@ -1165,7 +1171,7 @@
         });
 
         setInterval(() => {
-            if (!helpNotification.classList.contains('show') && serverReady) {
+            if (!helpNotification.classList.contains('show')) {
                 helpNotification.classList.add('show');
                 setTimeout(() => {
                     helpNotification.classList.remove('show');
@@ -1175,3 +1181,6 @@
 
         // Initialize
         generateTimeSlots();
+    </script>
+</body>
+</html>
